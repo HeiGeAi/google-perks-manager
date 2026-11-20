@@ -397,12 +397,16 @@ textarea { resize: vertical; }
 .studio-ledger .panel-header { border-bottom: 1px solid var(--line); }
 .job-empty { padding: 20px 24px; color: var(--muted); }
 .job-row {
-  display: grid; grid-template-columns: minmax(100px, 1fr) minmax(145px, 1.02fr) minmax(110px, auto);
+  display: grid; grid-template-columns: minmax(100px, 1fr) minmax(135px, .9fr) minmax(110px, auto);
   align-items: center; gap: 12px; padding: 13px 24px; border-bottom: 1px solid var(--line);
 }
 .job-row:last-child { border-bottom: 0; }
 .job-title, .job-tools, .job-status { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; overflow-wrap: anywhere; }
 .job-tools { align-items: flex-end; }
+.job-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.job-archive { color: var(--muted); font-size: 12px; }
+.drive-folder-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.drive-folder-tools .text-link { font-size: 13px; }
 .job-title small, .job-tools small, .job-status > span:not(.status) { font-size: 12px; color: var(--muted); }
 .status.warn { color: #62481e; background: #f8eedc; border-color: #e0d2ae; }
 .status.bad { color: var(--danger); background: var(--danger-soft); }
@@ -412,11 +416,15 @@ textarea { resize: vertical; }
 .studio-player audio, .studio-player video { display: block; width: 100%; }
 .studio-player video { max-height: min(54vh, 580px); background: #241e19; border-radius: var(--small-radius); }
 
+@media (max-width: 960px) {
+  .job-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .job-tools { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; }
+  .job-actions { justify-content: flex-start; }
+}
 @media (max-width: 720px) {
   .studio-modules { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .studio-tts { grid-row: auto; grid-column: 1 / -1; }
   .job-row { grid-template-columns: minmax(98px, 1fr) minmax(110px, 1fr); padding: 12px 14px; }
-  .job-tools { grid-column: 1 / -1; align-items: center; flex-direction: row; justify-content: space-between; }
 }
 @media (max-width: 415px) {
   .studio-modules { grid-template-columns: minmax(0, 1fr); }

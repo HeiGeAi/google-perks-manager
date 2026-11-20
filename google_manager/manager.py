@@ -10,6 +10,7 @@ from pathlib import Path
 
 from .accounts import AccountStore, UserError, empty_observation, label, timestamp
 from .colab import GPUS, Colab, ProviderError
+from .drive_archive import DriveArchive
 from .oauth import GoogleOAuth
 from .production import Production
 
@@ -27,6 +28,7 @@ class Manager:
         self.colab = colab if colab is not None else Colab()
         self.client_config = client_config or os.environ.get("GOOGLE_MANAGER_OAUTH_CLIENT")
         self.production = Production(self)
+        self.drive = DriveArchive(self.store, self.production)
 
     def benefits(self):
         try:

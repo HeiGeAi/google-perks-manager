@@ -43,22 +43,30 @@ function renderStudioJobs() {
   return problem + studio.jobs.map(job => {
     const [zh, en, kind] = jobStates[job.state] || ["状态待核对", "Check status", ""];
     const name = t(zh, en);
-    const target = job.mode === "mac" ? t("本机", "This computer") : "Colab · " + job.instance_id;
+    const target = job.mode === "mac" ? t("本机", "This computer") : job.state === "done"
+      ? t("Colab · 已存本机", "Colab · Stored locally") : "Colab · " + job.instance_id;
     const info = job.artifact;
     const detail = info
       ? [info.engine, formatMoney(info.seconds) + t(" 秒", " s"), info.width ? info.width + "×" + info.height : info.sample_rate + " Hz",
          formatMoney(info.size / (1024 * 1024)) + " MB"].filter(Boolean).join(" · ")
       : serviceText(job.phase, name);
-    const action = job.state === "done"
-      ? button(job.kind === "tts" ? t("试听", "Listen") : t("播放", "Play"), "studio-preview", "compact", job.id)
+    const action = job.state === "done" && info
+      ? button(job.kind === "tts" ? t("试听", "Listen") : t("播放", "Play"), "studio-preview", "compact", job.id) +
+        (desktop?.revealProductionFile ? button(t("打开文件夹", "Open folder"), "studio-reveal", "compact", job.id) : "") +
+        (desktop?.pickDriveFolder ? button(t("转存云盘", "Save to Drive"), "studio-archive", "compact", job.id) : "")
       : job.mode === "colab" && ["remote", "check"].includes(job.state)
         ? button(t("核对并取回", "Verify and collect"), "studio-check", "compact", job.id)
         : "";
+    const receipt = job.drive_archive;
+    const driveLabel = receipt ? [t("已复制到云盘目录", "Copied to Drive folder"),
+      data.accounts.find(profile => profile.id === receipt.account_id)?.name, receipt.project].filter(Boolean).join(" · ") : "";
     return '<article class="job-row">' +
       '<div class="job-title"><strong>' + escapeHtml(job.title) + '</strong><small>' +
       escapeHtml(t(...(productionKinds[job.kind] || ["任务", "Job"])) + " · " + target) + '</small></div>' +
-      '<div class="job-status">' + status(name, kind) + '<span>' + escapeHtml(detail) + '</span></div>' +
-      '<div class="job-tools"><small>' + escapeHtml(formatTime(job.updated_at)) + '</small>' + action + '</div></article>';
+      '<div class="job-status">' + status(name, kind) + '<span>' + escapeHtml(detail) + '</span>' +
+      (driveLabel ? '<small class="job-archive">' + escapeHtml(driveLabel) + '</small>' : "") + '</div>' +
+      '<div class="job-tools"><small>' + escapeHtml(formatTime(job.updated_at)) + '</small>' +
+      (action ? '<div class="job-actions">' + action + '</div>' : "") + '</div></article>';
   }).join("");
 }
 
@@ -91,7 +99,7 @@ function renderStudio(profile) {
     ).join("") +
     '</div><section class="panel studio-ledger"><div class="panel-header"><h2>' +
     t("任务与作品", "Jobs and outputs") + '</h2><span class="panel-note">' +
-    t("本机", "This computer") + (profile ? ' · ' + escapeHtml(profile.name) : '') +
+    t("本机作品 · 跨账号可见", "Local outputs · Visible across accounts") +
     '</span></div><div id="studio-jobs">' + renderStudioJobs() + '</div></section></div>';
 }
 
@@ -179,7 +187,6 @@ function openStudio(kind, profile) {
         body[type + "_job"] = form.get(type + "_job");
         body[type + "_path"] = form.get(type + "_path");
       }
-      body.source_account = profile?.id;
     } else {
       body.text = form.get("text");
       if (kind === "tts") body.instruction = form.get("instruction");
@@ -218,7 +225,7 @@ function previewStudio(id) {
   const player = job.kind === "tts" ? '<audio controls preload="metadata" src="' + url + '"></audio>'
     : '<video controls playsinline preload="metadata" src="' + url + '"></video>';
   const save = desktop?.revealProductionFile
-    ? button(t("在 Finder 中显示", "Show in Finder"), "studio-reveal", "compact", id)
+    ? button(t("打开文件夹", "Open folder"), "studio-reveal", "compact", id)
     : '<a class="button compact" href="' + url + '" download="' + escapeHtml(job.artifact.name) + '">' + t("下载作品", "Download output") + '</a>';
   setDialog(job.title, '<div class="studio-player">' + player + '</div><p class="panel-note">' +
     escapeHtml(formatMoney(job.artifact.seconds) + t(" 秒 · SHA-256 已记录", " s · SHA-256 recorded")) + '</p><div class="actions">' + save + '</div>');
@@ -229,6 +236,7 @@ async function studioAction(action, id, profile) {
     if (action === "studio-launch") openStudio(id, profile);
     else if (action === "studio-preview") previewStudio(id);
     else if (action === "studio-pick-file") await pickStudioFile(id);
+    else if (action === "studio-archive") await openStudioArchive(id, profile);
     else if (action === "studio-reveal") {
       const job = activeStudioJobs().find(row => row.id === id && row.artifact);
       if (job) await desktop?.revealProductionFile?.postMessage({ id, name: job.artifact.name });

@@ -49,7 +49,7 @@ internal sealed class DesktopWindow : Form
     private static readonly string[] BridgeMethods =
     [
         "getAppInfo", "setLanguage", "getAccountSelection", "setAccountSelection", "chooseOAuthClient",
-        "chooseCliToken", "openGoogleAuthorization", "pickMediaFile", "revealProductionFile",
+        "chooseCliToken", "openGoogleAuthorization", "pickMediaFile", "pickDriveFolder", "revealProductionFile",
         "copyCommunityRemark", "copyAgentPrompt", "checkForUpdate", "downloadUpdate", "installUpdate",
     ];
 
@@ -348,6 +348,15 @@ internal sealed class DesktopWindow : Form
                     "audio" => SelectFile(T("选择配音", "Choose audio"), "Audio (*.wav;*.m4a;*.mp3)|*.wav;*.m4a;*.mp3"),
                     _ => null,
                 };
+            case "pickDriveFolder":
+                if (body.ValueKind != JsonValueKind.Null) break;
+                using (var folder = new FolderBrowserDialog
+                {
+                    Description = T("选择 Google Drive 同步目录", "Choose a Google Drive folder"),
+                    UseDescriptionForTitle = true,
+                    ShowNewFolderButton = false,
+                })
+                    return folder.ShowDialog(this) == DialogResult.OK ? folder.SelectedPath : null;
             case "revealProductionFile":
                 Reveal(body);
                 return true;

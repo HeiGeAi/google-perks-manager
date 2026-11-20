@@ -123,7 +123,7 @@ class AccountStore:
             return list(self._load().values())
 
     def one(self, account_id):
-        if not re.fullmatch(r"[a-f0-9]{32}", account_id):
+        if not isinstance(account_id, str) or not re.fullmatch(r"[a-f0-9]{32}", account_id):
             raise UserError("找不到这个账号。", 404)
         with self.lock:
             account = self._load().get(account_id)

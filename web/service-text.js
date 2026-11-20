@@ -2,6 +2,13 @@
 
 // Translate the service messages displayed in the app, including phases saved by older versions.
 const serviceTextEnglish = {
+  "请输入有效的项目文件夹名称，最多 60 个字符。": "Enter a valid project folder name of up to 60 characters.",
+  "同步目录中存在同名文件，无法安全覆盖。": "A different file already uses this name in the sync folder.",
+  "本机作品的校验值已变化，无法转存。": "The local output checksum changed. The file was not copied.",
+  "同步目录不可用，请在 Google Drive 桌面版中重新选择。": "The sync folder is unavailable. Choose it again from Google Drive for desktop.",
+  "这个同步目录已关联其他账号，请选择目标账号的目录。": "Another account already uses this sync folder. Choose the destination account’s folder.",
+  "本机作品缺少校验值，无法转存。": "The local output is missing a checksum and could not be copied.",
+  "无法写入同步目录，请检查 Google Drive 桌面版的状态后重试。": "Could not write to the sync folder. Check Google Drive for desktop and try again.",
   "谷歌管理器只能通过本机地址访问。": "Google Perks Manager can only be accessed from this Mac.",
   "请求来源不属于当前谷歌管理器页面。": "The request did not come from the current app window.",
   "请求需使用 JSON 格式。": "The request must use JSON.",

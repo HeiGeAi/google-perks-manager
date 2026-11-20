@@ -33,9 +33,13 @@ open "/Applications/谷歌羊毛管理器.app"
 | 账号管理 | 点击“连接 Google”打开官方授权页。完成 Colab CLI 授权后，把 Google 显示的授权码粘回 App。“其他连接方式”支持导入已有的 Colab CLI 授权，或使用可自动接收授权结果的桌面 OAuth 配置。 |
 | Colab | 按账号刷新 CU 余额、费率和实例，核对后启动或释放实例。 |
 | 权益 | 对照 Google AI Pro、Ultra 5x 和 Ultra 20x 额度，查看学生版及试用限制。打开官方权益或领取入口，核对后记录当前账号的结果。 |
-| 创作 | 在当前账号的 Colab GPU 调用 Breeze TTS 2 和 Wan2.2。在本机合成音画、播放、回收和定位作品。 |
+| 创作 | 在当前账号的 Colab GPU 调用 Breeze TTS 2 和 Wan2.2。保存到本机的作品可跨账号播放、打开文件夹或用于音画合成。 |
 
 权益的实际资格与到账以 Google 账号显示为准。Breeze TTS 2 自托管权重及产物适用其研究与非商用许可。Colab 的资格、可用实例和费率由 Google 提供。[Google AI 套餐](https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en) · [Google Developer Program 权益](https://developers.google.com/profile/help/benefits?hl=en) · [Colab FAQ](https://research.google.com/colaboratory/faq.html) · [Breeze TTS 2](https://huggingface.co/BreezeBlue/Breeze-TTS-2)
+
+## 转存到 Google Drive
+
+在创作页的作品行点击“转存云盘”。首次使用时，在 Google Drive 桌面版登录目标账号，并为它选择一次“我的云端硬盘”或同步目录。之后可选已有项目，也可输入新项目名。点击“一键转存”，App 会在同步目录的 **Google Perks Manager** 下按项目归档，保留本机原件。同一作品重复转存到同一项目会复用已校验的副本。云端同步进度可在 Google Drive 桌面版里查看。 [Google Drive 桌面版](https://support.google.com/drive/answer/10838124?hl=zh-Hans)
 
 ## 一键接入 Agent
 

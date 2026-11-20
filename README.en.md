@@ -29,9 +29,13 @@ The app follows the system language by default. Use **Settings → Language** to
 | Accounts | Select Connect to Google to open Google’s consent page. Paste the code Google shows after approving the official Colab CLI connection. Under Other ways to connect, you can import an existing Colab CLI grant or use a desktop OAuth client for automatic callback. |
 | Colab | Check compute units, hourly usage, and running instances. Choose the account and runtime before starting or stopping an instance. |
 | Perks | Compare Google AI Pro, Ultra 5x and Ultra 20x, check student and trial restrictions, and record results for each account. |
-| Studio | Run Breeze TTS 2 or Wan2.2 on a selected Colab GPU, combine audio and video locally, and find or play completed files. |
+| Studio | Run Breeze TTS 2 or Wan2.2 on a selected Colab GPU. Play, reveal, or remix outputs saved on this computer from any account. |
 
 Google determines actual benefit eligibility, Colab availability, and usage. The Breeze TTS 2 weights and self-hosted outputs carry research and non-commercial terms. [Google AI plans](https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en) · [Developer Program perks](https://developers.google.com/profile/help/benefits?hl=en) · [Colab FAQ](https://research.google.com/colaboratory/faq.html) · [Breeze TTS 2](https://huggingface.co/BreezeBlue/Breeze-TTS-2)
+
+## Save outputs to Google Drive
+
+Choose **Save to Drive** on an output in Studio. Sign in to the destination account in Google Drive for desktop and select its My Drive or sync folder once. Choose an existing project or name a new one, then select **Save to Drive**. The app copies the output into a project folder under **Google Perks Manager** and keeps the original on your computer. Repeating the same transfer reuses the verified copy. Check upload progress in Google Drive for desktop. [Google Drive for desktop](https://support.google.com/drive/answer/10838124?hl=en)
 
 ## Connect an agent
 

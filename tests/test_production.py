@@ -1,12 +1,15 @@
+import hashlib
 import json
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
 from google_manager.accounts import UserError, write_private_json
 from google_manager.colab import Colab
+from google_manager.drive_archive import WORKSPACE
 from google_manager.manager import Manager
 from google_manager.oauth import COLAB_SCOPE, EMAIL_SCOPE
 
@@ -90,6 +93,64 @@ class ProductionTests(unittest.TestCase):
             self.production.spec(body)
         spec = self.production.spec({**body, "mode": "colab"})
         self.assertEqual(spec["engine"], "Breeze TTS 2")
+
+    def local_colab_output(self, account):
+        with patch.object(self.production, "_launch"):
+            job = self.production.start(
+                {"id": "6" * 32, "title": "课程素材", "kind": "tts", "mode": "colab",
+                 "account_id": account, "instance_id": "machine", "text": "本机素材", "confirmed": True}
+            )
+        source = self.production.root / job["id"] / "output.wav"
+        data = b"downloaded output fixture"
+        source.write_bytes(data)
+        self.production.update(job["id"], state="done", artifact={
+            "name": source.name, "size": len(data), "sha256": hashlib.sha256(data).hexdigest(),
+        })
+        return job["id"], source
+
+    def test_saved_colab_output_is_available_to_other_accounts(self):
+        a = self.cloud_profile("A", "first@example.test")
+        b = self.cloud_profile("B", "second@example.test")
+        job_id, source = self.local_colab_output(a)
+        for account in (None, a, b):
+            self.assertEqual([job["id"] for job in self.production.list(account)], [job_id])
+        self.assertEqual(self.production.mux_source({"audio_job": job_id, "source_account": b}, "audio", {"tts"}),
+                         {"audio_job": job_id})
+        source.unlink()
+        self.assertEqual(self.production.list(b), [])
+
+    def test_drive_archive_creates_project_and_reuses_verified_copy(self):
+        a = self.cloud_profile("A", "first@example.test")
+        b = self.cloud_profile("B", "second@example.test")
+        job_id, source = self.local_colab_output(a)
+        original = source.read_bytes()
+        drive = self.manager.drive
+        with tempfile.TemporaryDirectory() as sync:
+            drive.configure(b, sync)
+            self.assertEqual(drive.state(b)["projects"], [])
+            self.assertFalse(drive.state(a)["ready"])
+            with self.assertRaisesRegex(UserError, "其他账号"):
+                drive.configure(a, sync)
+            with self.assertRaisesRegex(UserError, "有效的项目"):
+                drive.archive(job_id, b, "../outside")
+            with ThreadPoolExecutor(max_workers=2) as threads:
+                result = list(threads.map(lambda _: drive.archive(job_id, b, "项目甲"), range(2)))
+            self.assertEqual(sorted(item["reused"] for item in result), [False, True])
+            folder = Path(sync) / WORKSPACE / "项目甲"
+            copied = folder / result[0]["filename"]
+            self.assertEqual(list(folder.iterdir()), [copied])
+            self.assertEqual(copied.read_bytes(), original)
+            self.assertEqual(source.read_bytes(), original)
+            self.assertEqual(drive.state(b)["last_project"], "项目甲")
+            self.assertEqual(self.production.get(job_id)["drive_archive"]["account_id"], b)
+            copied.write_bytes(b"other output")
+            with self.assertRaisesRegex(UserError, "同名文件"):
+                drive.archive(job_id, b, "项目甲")
+            self.assertEqual(copied.read_bytes(), b"other output")
+            source.write_bytes(b"x" * len(original))
+            with self.assertRaisesRegex(UserError, "校验值已变化"):
+                drive.archive(job_id, b, "项目乙")
+            self.assertEqual(list((Path(sync) / WORKSPACE / "项目乙").iterdir()), [])
 
 
 if __name__ == "__main__":

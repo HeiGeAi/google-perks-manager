@@ -16,26 +16,20 @@ $env:PYTHONUTF8 = "1"
 $env:GOOGLE_MANAGER_STARTUP_LOG = Join-Path $scratch "startup.log"
 $guide = & $service --agent guide | ConvertFrom-Json
 if (!$guide.commands.state) { throw "The installed service could not run its Agent CLI." }
+$picture = Join-Path $scratch "picture.mp4"
+$sound = Join-Path $scratch "sound.wav"
+if (!(Get-Command ffmpeg -ErrorAction SilentlyContinue)) { choco install ffmpeg --yes --no-progress }
+ffmpeg -hide_banner -loglevel error -f lavfi -i "color=c=blue:s=320x192:r=24:d=1" -c:v libx264 -pix_fmt yuv420p $picture
+ffmpeg -hide_banner -loglevel error -f lavfi -i "sine=frequency=440:sample_rate=44100:duration=2" $sound
 $reportFile = Join-Path $scratch "windows-smoke.json"
 $desktop = Start-Process $app -ArgumentList ('--verify-installation "' + $reportFile + '"') -PassThru
 try {
-    for ($attempt = 0; $attempt -lt 120; $attempt++) {
-        if ($desktop.HasExited) { throw "The installed app exited before displaying a window." }
-        if (Test-Path $reportFile) { break }
+    $discovery = Join-Path $env:GOOGLE_MANAGER_DATA_DIR ".agent-runtime.json"
+    for ($attempt = 0; $attempt -lt 100 -and !(Test-Path $discovery); $attempt++) {
+        if ($desktop.HasExited) { throw "The installed app exited before starting the service." }
         Start-Sleep -Milliseconds 500
     }
-    if (!(Test-Path $reportFile)) { throw "The installed app did not report its native UI checks." }
-    $report = Get-Content $reportFile -Raw | ConvertFrom-Json -AsHashtable
-    if (!$report.nativeWebView2) { throw "Failed native UI check: $($report.error) ($($report.reason))." }
-    Write-Host "Windows native UI checks passed."
-
-    $rows = & $service --agent state | ConvertFrom-Json
-    if ($rows.accounts.Count -ne 1 -or $rows.accounts[0].name -ne "Windows test") { throw "The packaged Agent CLI did not read the test profile." }
-    $picture = Join-Path $scratch "picture.mp4"
-    $sound = Join-Path $scratch "sound.wav"
-    if (!(Get-Command ffmpeg -ErrorAction SilentlyContinue)) { choco install ffmpeg --yes --no-progress }
-    ffmpeg -hide_banner -loglevel error -f lavfi -i "color=c=blue:s=320x192:r=24:d=1" -c:v libx264 -pix_fmt yuv420p $picture
-    ffmpeg -hide_banner -loglevel error -f lavfi -i "sine=frequency=440:sample_rate=44100:duration=2" $sound
+    if (!(Test-Path $discovery)) { throw "The installed service did not become reachable." }
     $job = (& $service --agent mux --title "Windows test mix" --video-path $picture --audio-path $sound | ConvertFrom-Json).job
     for ($attempt = 0; $attempt -lt 100; $attempt++) {
         $job = (& $service --agent job $job.id | ConvertFrom-Json).job
@@ -48,7 +42,23 @@ try {
     if ($probe.streams.codec_type -notcontains "audio" -or $probe.streams.codec_type -notcontains "video") {
         throw "The Windows export must contain both audio and video."
     }
+
+    for ($attempt = 0; $attempt -lt 120 -and !(Test-Path $reportFile); $attempt++) {
+        if ($desktop.HasExited) { throw "The installed app exited before finishing its native UI checks." }
+        Start-Sleep -Milliseconds 500
+    }
+    if (!(Test-Path $reportFile)) { throw "The installed app did not report its native UI checks." }
+    $report = Get-Content $reportFile -Raw | ConvertFrom-Json -AsHashtable
+    if (!$report.nativeWebView2 -or !$report.driveProjectDialog) { throw "Failed native UI check: $($report.error) ($($report.reason))." }
+    $rows = & $service --agent state | ConvertFrom-Json
+    if ($rows.accounts.Count -ne 1 -or $rows.accounts[0].name -ne "Windows test") { throw "The packaged Agent CLI did not read the test profile." }
+    $copies = @(Get-ChildItem -File (Join-Path $scratch "Drive fixture/Google Perks Manager/Windows project"))
+    if ($copies.Count -ne 1 -or (Get-FileHash $copies[0].FullName).Hash -ne (Get-FileHash $output).Hash) {
+        throw "The Drive sync fixture must contain one byte-identical copy."
+    }
+    Write-Host "Windows native UI and Drive project copy passed."
     $report.agentCli = $true
+    $report.driveSyncFolderCopy = $true
     $report.mediaExport = @{ audio = $true; video = $true; seconds = $job.artifact.seconds }
     $report.installerSHA256 = (Get-FileHash $package -Algorithm SHA256).Hash.ToLowerInvariant()
     $report | ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 (Join-Path $repo "dist/windows-smoke.json")

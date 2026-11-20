@@ -131,8 +131,15 @@ class Production:
             self.manager.store.one(account_id)
         with self.lock:
             jobs = [self.public(job) for job in self._rows()
-                    if job["mode"] == "mac" or job["account_id"] == account_id]
+                    if job["mode"] == "mac" or job["account_id"] == account_id or self.has_local_output(job)]
         return sorted(jobs, key=lambda job: (job["created_at"], job["id"]), reverse=True)
+
+    def has_local_output(self, row):
+        try:
+            self.saved_file(row)
+            return True
+        except UserError:
+            return False
 
     def update(self, job_id, **changes):
         with self.lock:
@@ -148,8 +155,7 @@ class Production:
         job = self.get(job_id)
         if job["kind"] not in kinds or job["state"] != "done":
             raise UserError("请选择已生成的媒体。")
-        if job["mode"] == "colab" and job["account_id"] != body.get("source_account"):
-            raise UserError("请切换到保存这份作品的 Google 账号。")
+        self.saved_file(job)
         return {field + "_job": job_id}
 
     def spec(self, body):
@@ -367,9 +373,21 @@ class Production:
 
     def artifact_path(self, job_id):
         row = self.get(job_id)
+        return row, self.saved_file(row)
+
+    def saved_file(self, row):
         if row["state"] != "done":
             raise UserError("作品尚未保存。", 404)
-        path = self.root / job_id / MEDIA_NAMES[row["kind"]]
-        if not path.is_file() or path.is_symlink() or path.stat().st_size != row["artifact"]["size"]:
-            raise UserError("找不到已保存的作品文件。", 404)
-        return row, path
+        folder = self.root / row["id"]
+        path = folder / MEDIA_NAMES[row["kind"]]
+        try:
+            folder_info = folder.lstat()
+            info = path.lstat()
+            redirected = getattr(folder_info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+            redirected |= getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+            if (stat.S_ISDIR(folder_info.st_mode) and stat.S_ISREG(info.st_mode) and not redirected
+                and info.st_size == (row.get("artifact") or {}).get("size")):
+                return path
+        except (OSError, ValueError):
+            pass
+        raise UserError("找不到已保存的作品文件。", 404)

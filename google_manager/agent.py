@@ -39,6 +39,8 @@ def guide(language):
             if english else "使用 --confirm 前，请让用户确认账号、目标实例、可核对的当次费率及具体操作。Breeze TTS 2 自托管仅用于研究和非商用。",
             "After submitting a job, read job status and collect when needed. Use the local artifact path from a completed job. Reuse the same job ID on retry."
             if english else "提交后读取 job 进度，必要时 collect 核对并取回。任务完成后可读取作品本机路径，重试时沿用原任务 ID。",
+            "Saved local outputs are available across accounts. In Studio, users can open an output folder or save a copy to a Google Drive sync folder."
+            if english else "已保存的本机作品可跨账号查看。用户可在创作页打开作品文件夹，或转存到 Google Drive 同步目录。",
             "Keep credentials on the user's computer. Import only an authorized official Colab CLI token file by path. A cached observation describes the recorded time, and a plan filter describes catalog coverage."
             if english else "凭证保存在本机。导入官方 Colab CLI 授权时只传用户指定的文件路径。历史快照对应记录时间，方案筛选对应目录范围。",
         ],

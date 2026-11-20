@@ -216,6 +216,8 @@ class Handler(BaseHTTPRequestHandler):
                 query = parse_qs(urlsplit(self.path).query, max_num_fields=3)
                 account = query.get("account", [None])[0]
                 self.json_response({"jobs": manager.production.list(account)})
+            elif match := re.fullmatch(r"/api/drive/accounts/([a-f0-9]{32})", path):
+                self.json_response(manager.drive.state(match[1]))
             elif match := re.fullmatch(r"/api/production/jobs/([a-f0-9]{32})/media", path):
                 self.job_media(match[1])
             elif path == "/oauth/callback":
@@ -277,6 +279,11 @@ class Handler(BaseHTTPRequestHandler):
         manager = self.server.manager
         if path == "/api/production/jobs":
             return 202, {"job": manager.production.start(body)}
+        if match := re.fullmatch(r"/api/production/jobs/([a-f0-9]{32})/archive", path):
+            return 200, {"archive": manager.drive.archive(match[1], body.get("account_id"), body.get("project"))}
+        if match := re.fullmatch(r"/api/drive/accounts/([a-f0-9]{32})", path):
+            manager.drive.configure(match[1], body.get("folder"))
+            return 200, {"drive": manager.drive.state(match[1])}
         if match := re.fullmatch(r"/api/production/jobs/([a-f0-9]{32})/refresh", path):
             return 202, {"job": manager.production.refresh(match[1])}
         if path == "/api/accounts":

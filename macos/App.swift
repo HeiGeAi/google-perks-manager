@@ -189,7 +189,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()
         for name in ["openGoogleAuthorization", "chooseOAuthClient", "chooseCliToken", "getAccountSelection", "setAccountSelection",
-                     "pickMediaFile", "revealProductionFile", "copyCommunityRemark", "getAppInfo",
+                     "pickMediaFile", "pickDriveFolder", "revealProductionFile", "copyCommunityRemark", "getAppInfo",
                      "setLanguage", "copyAgentPrompt", "checkForUpdate", "downloadUpdate", "installUpdate"] {
             configuration.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: name)
         }
@@ -402,16 +402,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         if port != nil { displayStatus(localized("窗口内容已关闭，请重试。", "The workspace closed unexpectedly. Try again."), loading: false) }
     }
 
-    private func selectFile(title: String, contentType: UTType, reply: @escaping (Any?, String?) -> Void) {
+    private func selectFile(title: String, contentType: UTType?, reply: @escaping (Any?, String?) -> Void) {
         guard filePanel == nil else {
             reply(nil, localized("文件选择窗口已打开。", "A file picker is already open."))
             return
         }
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [contentType]
+        if let contentType { panel.allowedContentTypes = [contentType] }
         panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.canChooseFiles = true
+        panel.canChooseDirectories = contentType == nil
+        panel.canChooseFiles = contentType != nil
+        if contentType == nil {
+            let locations = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/CloudStorage")
+            if FileManager.default.fileExists(atPath: locations.path) { panel.directoryURL = locations }
+        }
         panel.title = title
         panel.prompt = localized("选择", "Choose")
         filePanel = panel
@@ -625,6 +629,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             case "audio": selectFile(title: localized("选择配音音轨", "Choose an audio track"), contentType: .audio, reply: replyHandler)
             default: replyHandler(nil, localized("请选择支持的媒体格式。", "Choose a supported media format."))
             }
+        case "pickDriveFolder":
+            guard message.body is NSNull else {
+                replyHandler(nil, localized("目录选择参数无效。", "Invalid folder picker request."))
+                return
+            }
+            selectFile(title: localized("选择 Google Drive 同步目录", "Choose a Google Drive folder"),
+                       contentType: nil, reply: replyHandler)
         case "revealProductionFile":
             guard let values = message.body as? [String: String], let id = values["id"], let name = values["name"],
                   id.range(of: "^[a-f0-9]{32}$", options: .regularExpression) != nil,

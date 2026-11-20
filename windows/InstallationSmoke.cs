@@ -62,12 +62,40 @@ internal static class InstallationSmoke
                 await Expect(view, $"document.querySelector('.benefit-filters [data-id={plan}]').getAttribute('aria-pressed') === 'true'");
             }
             await Execute(view, "document.querySelector('.benefit-filters [data-id=all]').click()");
+
+            stage = "studio and Drive project";
+            await Execute(view, "location.hash = 'studio'");
+            await Expect(view, """
+                document.querySelector('.job-row [data-action=studio-reveal]') &&
+                document.querySelector('.job-row [data-action=studio-archive]') &&
+                window.googlePerksDesktop.pickDriveFolder
+                """);
+            await Execute(view, "document.querySelector('.job-row [data-action=studio-archive]').click()");
+            await Expect(view, "document.querySelector('dialog[open] [data-drive-pick]') && !document.querySelector('dialog [type=submit]')");
+            await Execute(view, "document.querySelector('dialog [data-action=close-dialog]').click()");
+            var sync = Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(report)!, "Drive fixture"));
+            await Execute(view, $$"""
+                void api(driveAccountPath(account().id), {folder: {{JsonSerializer.Serialize(sync.FullName)}}})
+                  .then(() => document.querySelector('.job-row [data-action=studio-archive]').click());
+                """);
+            await Expect(view, "document.querySelector('dialog[open] [name=drive_new_project]')");
+            await Execute(view, """
+                { const form = document.querySelector('dialog form');
+                  form.elements.drive_new_project.value = 'Windows project';
+                  form.requestSubmit(); }
+                """);
+            await Expect(view, """
+                !document.querySelector('dialog[open]') &&
+                document.querySelector('.job-archive')?.textContent.includes('Windows project')
+                """);
+            await Execute(view, "document.querySelector('.job-archive').scrollIntoView({block:'nearest'})");
             await using var screenshot = File.Create(Path.ChangeExtension(report, ".png"));
             await view.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, screenshot);
             Write(report, new
             {
                 installed = true, nativeWebView2 = true, version,
                 languages = new[] { "zh-CN", "en" }, accountAlias = true, oauthGooglePage = true, tiers = 3,
+                studioFolderAction = true, driveProjectDialog = true,
             });
         }
         catch (Exception ex)

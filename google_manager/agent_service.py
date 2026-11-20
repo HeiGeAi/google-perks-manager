@@ -121,12 +121,13 @@ def agent_job(production, row):
     return result
 
 
-def lookup_job(production, job_id, account_id):
+def lookup_job(production, job_id, account_id, *, collect=False):
     if not isinstance(job_id, str) or not ID.fullmatch(job_id):
         raise UserError("Choose a job ID from the local job list.")
     row = production.get(job_id)
     if row["mode"] == "colab" and row["account_id"] != account_id:
-        raise UserError("Choose the account that owns this job.", 404)
+        if collect or not production.has_local_output(row):
+            raise UserError("Choose the account that owns this job.", 404)
     return row
 
 
@@ -167,7 +168,7 @@ def execute(manager, dispatch, command, body):
     if command == "jobs":
         return 200, {"jobs": [agent_job(production, row) for row in production.list(account_id)]}
     if command in {"job", "collect"}:
-        row = lookup_job(production, body.get("job_id"), account_id)
+        row = lookup_job(production, body.get("job_id"), account_id, collect=command == "collect")
         code = 200
         if command == "collect":
             code, payload = dispatch(f"/api/production/jobs/{row['id']}/refresh", {})
@@ -180,7 +181,7 @@ def execute(manager, dispatch, command, body):
     if command == "mux":
         keys = ("video_job", "video_path", "audio_job", "audio_path")
         job = {"id": body.get("job_id"), "kind": "mux", "mode": "mac", "title": body.get("title"),
-               "source_account": account_id, **{key: body.get(key) for key in keys}}
+               **{key: body.get(key) for key in keys}}
         code, payload = dispatch("/api/production/jobs", job)
         return code, {"job": agent_job(production, payload["job"])}
 
