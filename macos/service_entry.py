@@ -7,7 +7,8 @@ from google_manager.server import main
 
 
 if __name__ == "__main__":
-    if sys.argv[1:] == ["--colab-worker"]:
+    if sys.argv[1:2] == ["--colab-worker"]:
+        del sys.argv[1]
         runpy.run_module("google_manager.colab_worker", run_name="__main__")
     elif sys.argv[1:2] == ["--agent"]:
         from google_manager.agent import main as agent_main

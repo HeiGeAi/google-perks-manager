@@ -28,7 +28,7 @@ mkdir "$stage/web"
 "$build/venv/bin/python" -m PyInstaller --noconfirm --log-level WARN --onedir \
     --name GoogleManagerService --paths "$repo" \
     --specpath "$build" --workpath "$build/freeze" --distpath "$build/payload" \
-    --hidden-import google_manager.colab_worker \
+    --hidden-import google_manager.colab_worker --collect-data colab_cli \
     --add-data "$repo/benefits.json:." --add-data "$stage/web:web" \
     --add-data "$repo/recipes/run_job.py:recipes" --add-data "$repo/recipes/wan22.json:recipes" \
     --add-data "$repo/recipes/breeze.json:recipes" \

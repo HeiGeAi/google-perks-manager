@@ -1,4 +1,4 @@
-"""User-initiated Google Desktop OAuth with PKCE and loopback redirects."""
+"""Account-scoped Google authorization, with Desktop OAuth and Colab CLI flows."""
 
 import base64
 import hashlib
@@ -16,6 +16,7 @@ from urllib.parse import urlencode
 from urllib.request import HTTPRedirectHandler, HTTPSHandler, Request, build_opener
 
 from .accounts import UserError, read_private_json
+from .colab_auth import LIFETIME, MAX_CODE
 
 
 AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -143,6 +144,13 @@ class Login:
     deadline: float
 
 
+@dataclass(frozen=True)
+class CliLogin:
+    account_id: str
+    worker: object
+    deadline: float
+
+
 class GoogleOAuth:
     def __init__(self):
         self._pending = {}
@@ -152,28 +160,38 @@ class GoogleOAuth:
         now = time.monotonic()
         for state, login in list(self._pending.items()):
             if login.deadline < now:
-                del self._pending[state]
+                self._drop(state)
+
+    def _drop(self, state):
+        login = self._pending.pop(state)
+        if isinstance(login, CliLogin):
+            login.worker.close()
 
     def connecting(self, account_id):
         with self._lock:
             self._clear_expired()
             return any(login.account_id == account_id for login in self._pending.values())
 
-    def cancel(self, account_id):
+    def cancel(self, account_id, attempt=None):
         with self._lock:
-            self._cancel(account_id)
+            self._cancel(account_id, attempt)
 
-    def _cancel(self, account_id):
+    def _cancel(self, account_id, attempt=None):
         for state, login in list(self._pending.items()):
-            if login.account_id == account_id:
-                del self._pending[state]
+            if login.account_id == account_id and (attempt is None or attempt == state):
+                self._drop(state)
+
+    def close(self):
+        with self._lock:
+            for state in list(self._pending):
+                self._drop(state)
 
     def begin(self, account, path, redirect_uri):
         client = read_desktop_client(path)
         state = secrets.token_urlsafe(32)
         verifier = secrets.token_urlsafe(64)
         challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode("ascii")).digest()).rstrip(b"=")
-        login = Login(account["id"], verifier, redirect_uri, client, time.monotonic() + 600)
+        login = Login(account["id"], verifier, redirect_uri, client, time.monotonic() + LIFETIME)
         with self._lock:
             self._clear_expired()
             self._cancel(account["id"])
@@ -190,23 +208,48 @@ class GoogleOAuth:
             "code_challenge_method": "S256",
             "login_hint": account["email"],
         })
-        return f"{AUTHORIZE_URL}?{query}"
+        return {"open_url": f"{AUTHORIZE_URL}?{query}", "flow": "desktop", "attempt": state}
+
+    def begin_cli(self, account, colab):
+        worker, url = colab.authorize()
+        state = secrets.token_urlsafe(32)
+        login = CliLogin(account["id"], worker, time.monotonic() + LIFETIME)
+        with self._lock:
+            self._clear_expired()
+            self._cancel(account["id"])
+            self._pending[state] = login
+        return {"open_url": url, "flow": "cli", "attempt": state}
 
     def account_for_state(self, state):
         with self._lock:
             self._clear_expired()
             login = self._pending.get(state)
-        if login is None:
+        if not isinstance(login, Login):
             raise UserError("登录链接已过期，请回到谷歌管理器重新连接。", 400)
         return login.account_id
 
     def consume(self, state):
         with self._lock:
             self._clear_expired()
-            login = self._pending.pop(state, None)
-        if login is None:
-            raise UserError("登录链接已过期，请回到谷歌管理器重新连接。", 400)
+            login = self._pending.get(state)
+            if not isinstance(login, Login):
+                raise UserError("登录链接已过期，请回到谷歌管理器重新连接。", 400)
+            del self._pending[state]
         return login
+
+    def finish_cli(self, account, state, code):
+        if (not isinstance(code, str) or not 0 < len(code) <= MAX_CODE
+            or not code.isascii() or any(char.isspace() for char in code)):
+            raise UserError("请粘贴 Google 页面显示的完整授权码。")
+        with self._lock:
+            self._clear_expired()
+            login = self._pending.get(state)
+            if not isinstance(login, CliLogin) or login.account_id != account["id"]:
+                raise UserError("授权会话已结束，请重新连接 Google。", 409)
+            del self._pending[state]
+        payload, client = login.worker.exchange(code)
+        credential = token_record(payload, client)
+        return identity(credential["access_token"], account["email"], account["subject"]), credential
 
     def exchange(self, account, login, code):
         form = {

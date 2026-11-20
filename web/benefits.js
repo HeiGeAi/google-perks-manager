@@ -1,6 +1,11 @@
 "use strict";
 
 const benefitPlans = { pro: "Pro", "ultra-5x": "Ultra 5x", "ultra-20x": "Ultra 20x" };
+const planMaterials = {
+  pro: "plan-material gold",
+  "ultra-5x": "plan-material platinum",
+  "ultra-20x": "plan-material diamond",
+};
 const benefitFilters = { all: null, ...benefitPlans };
 const benefitViews = new Map();
 const officialPlanComparison = "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en";
@@ -25,14 +30,24 @@ function localizedBenefit(benefit) {
   return localized;
 }
 
+function planLabel(plan, label = benefitPlans[plan]) {
+  const material = planMaterials[plan];
+  const text = escapeHtml(label);
+  return material ? `<span class="plan-badge ${material}">${text}</span>` : text;
+}
+
 function planBadge(benefit) {
   if (benefit.independent) return `<span class="plan-badge">${t("独立资格", "Separate eligibility")}</span>`;
   const plans = Object.keys(benefitPlans).filter(key => benefit.plan_values?.[key]);
   if (!plans.length) return `<span class="plan-badge">${t("资格待核对", "Check eligibility")}</span>`;
   if (plans.length === 3) return `<span class="plan-badge">${t("Pro 与 Ultra", "Pro and Ultra")}</span>`;
+  if (plans.length === 1) {
+    const plan = plans[0];
+    const label = benefitPlans[plan];
+    return planLabel(plan, plan === "pro" ? label : t(`${label} 专享`, `${label} only`));
+  }
   if (!plans.includes("pro")) {
-    const label = plans.length === 2 ? "Ultra" : benefitPlans[plans[0]];
-    return `<span class="plan-badge exclusive">${t(`${label} 专享`, `${label} only`)}</span>`;
+    return `<span class="plan-badge exclusive">${t("Ultra 专享", "Ultra only")}</span>`;
   }
   return '<span class="plan-badge">' + plans.map(key => benefitPlans[key]).join(" · ") + '</span>';
 }
@@ -46,8 +61,9 @@ function renderPlanComparison(catalog, filter) {
   const compared = catalog.filter(item => item.comparison && item.plan_values);
   if (!compared.length) return "";
   const lastChecked = compared.map(item => item.checked_on).filter(Boolean).sort()[0];
-  const headers = Object.entries(benefitPlans).map(([key, label]) =>
-    '<th scope="col"' + (key === filter ? ' class="current-plan"' : '') + '>' + label + '</th>'
+  const helpLanguage = t("zh-Hans", "en");
+  const headers = Object.keys(benefitPlans).map(key =>
+    '<th scope="col"' + (key === filter ? ' class="current-plan"' : '') + '>' + planLabel(key) + '</th>'
   ).join("");
   const rows = compared.map(item => '<tr><th scope="row">' + escapeHtml(item.comparison) + '</th>' +
     Object.keys(benefitPlans).map(key => '<td' + (key === filter ? ' class="current-plan"' : '') + '>' +
@@ -57,7 +73,19 @@ function renderPlanComparison(catalog, filter) {
       <h2 id="plan-reference-title">${t("会员额度参考", "Plan allowances")}</h2>
       ${externalLink(t("Google 官方套餐对照", "Compare official Google plans"), officialPlanComparison, "text compact")}
     </header>
-    <table class="plan-comparison" aria-labelledby="plan-reference-title">
+    <div class="plan-student-note">
+      <p id="student-pro-note"><strong>${t("学生优惠 Pro", "Google AI Pro student offers")}</strong>
+        ${t(
+          "表中 Pro 按标准套餐展示。学生优惠的权益和额度因地区及活动而异。免费试用期间，Colab 算力和 YouTube Premium Lite 等权益受限。10 TB 存储加购仅适用于符合条件的常规 Pro 方案。",
+          "The Pro column shows standard plan allowances. Student perks and limits vary by region and offer. Free trials restrict perks such as Colab compute and YouTube Premium Lite. The 10 TB storage add-on is available to eligible standard Pro plans."
+        )}
+      </p>
+      <div class="actions">
+        ${externalLink(t("学生优惠说明", "Student offer details"), `https://support.google.com/googleone/answer/17422238?hl=${helpLanguage}`)}
+        ${externalLink(t("试用权益限制", "Trial benefit restrictions"), `https://support.google.com/googleone/answer/16105039?hl=${helpLanguage}`)}
+      </div>
+    </div>
+    <table class="plan-comparison" aria-labelledby="plan-reference-title" aria-describedby="student-pro-note">
       <thead><tr><th scope="col">${t("权益项目", "Perk")}</th>${headers}</tr></thead>
       <tbody>${rows}</tbody>
     </table>
@@ -68,17 +96,18 @@ function renderBenefitValues(benefit, filter) {
   const values = benefit.plan_values;
   if (!values) return "";
   const groups = new Map();
-  for (const [key, label] of Object.entries(benefitPlans)) {
+  for (const key of Object.keys(benefitPlans)) {
     const amount = values[key];
     if (!amount || (filter !== "all" && key !== filter)) continue;
-    const labels = groups.get(amount) || [];
-    groups.set(amount, [...labels, label]);
+    const plans = groups.get(amount) || [];
+    groups.set(amount, [...plans, key]);
   }
   if (!groups.size) return "";
-  const rows = [...groups].map(([amount, labels]) => {
-    let label = labels.join(" · ");
-    if (labels.length === 3) label = t("Pro 与 Ultra", "Pro and Ultra");
-    else if (labels.length === 2 && !labels.includes("Pro")) label = "Ultra";
+  const rows = [...groups].map(([amount, plans]) => {
+    let label = plans.map(key => benefitPlans[key]).join(" · ");
+    if (plans.length === 1) label = planLabel(plans[0]);
+    else if (plans.length === 3) label = t("Pro 与 Ultra", "Pro and Ultra");
+    else if (!plans.includes("pro")) label = "Ultra";
     return '<div><dt>' + label + '</dt><dd>' + planValue(amount, benefit.plan_unit) + '</dd></div>';
   });
   return `<dl class="benefit-values" aria-label="${t("按档位查看权益", "Perk allowance by plan")}">${rows.join("")}</dl>`;
@@ -119,10 +148,11 @@ function renderBenefits(profile) {
   const filter = benefitViews.get(profile?.id) || "all";
   const catalog = data.benefits.map(localizedBenefit);
   const visible = catalog.filter(item => filter === "all" || item.independent || !item.plan_values || item.plan_values[filter]);
-  const filters = Object.entries(benefitFilters).map(([key, label]) =>
-    '<button type="button" class="button compact" data-action="filter-benefits" data-id="' + key +
-    '" aria-pressed="' + (key === filter) + '">' + (label || t("全部", "All")) + '</button>'
-  ).join("");
+  const filters = Object.entries(benefitFilters).map(([key, label]) => {
+    const material = planMaterials[key] ? ` ${planMaterials[key]}` : "";
+    return `<button type="button" class="button compact${material}" data-action="filter-benefits"
+      data-id="${key}" aria-pressed="${key === filter}">${label || t("全部", "All")}</button>`;
+  }).join("");
   const context = profile ? `<div class="panel summary-top">${identity(profile)}<p class="panel-note">${t("前往 Google 后，请核对页面使用的邮箱。", "Verify the email address when you open a Google page.")}</p></div>` : "";
   return `<div class="layout-stack">
     ${context}

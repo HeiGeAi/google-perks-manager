@@ -150,6 +150,14 @@ def execute(payload):
 
 
 if __name__ == "__main__":
+    if sys.argv[1:] == ["--authorize"]:
+        from .colab_auth import run_authorization
+
+        try:
+            run_authorization()
+        except Exception:
+            raise SystemExit(1) from None
+        raise SystemExit(0)
     try:
         output = execute(json.load(sys.stdin))
     except Exception:

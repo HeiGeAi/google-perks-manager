@@ -25,6 +25,7 @@ let busy = false;
 let dialogSubmit;
 let returnFocus;
 let oauthWatch;
+let activeAuthorization;
 let stateVersion = 0;
 
 function escapeHtml(value) {
@@ -144,8 +145,8 @@ function accountPath(profile, suffix = "") {
 }
 
 function identity(profile) {
-  const letter = Array.from(profile.name || profile.email || "G")[0];
-  return `<div class="account-identity"><span class="avatar" aria-hidden="true">${escapeHtml(letter)}</span><div><strong>${escapeHtml(profile.name)}</strong><small>${escapeHtml(profile.email)}</small></div></div>`;
+  const letter = Array.from(profile.name || "G")[0];
+  return `<div class="account-identity"><span class="avatar" aria-hidden="true">${escapeHtml(letter)}</span><strong>${escapeHtml(profile.name)}</strong></div>`;
 }
 
 function status(text, kind = "") {
@@ -158,13 +159,13 @@ function authStatus(profile) {
 
 function renderAccountSwitch() {
   const items = data.accounts.map(profile => {
-    const letter = Array.from(profile.name || profile.email || "G")[0];
+    const letter = Array.from(profile.name || "G")[0];
     return `<button type="button" class="account-item" data-action="select-account" data-id="${escapeHtml(profile.id)}" aria-pressed="${profile.id === selected}">
       <span class="avatar" aria-hidden="true">${escapeHtml(letter)}</span>
-      <span><strong>${escapeHtml(profile.name)}</strong><small>${escapeHtml(profile.email)}</small></span><span class="account-dot" aria-hidden="true"></span>
+      <strong>${escapeHtml(profile.name)}</strong><span class="account-dot" aria-hidden="true"></span>
     </button>`;
   });
-  const options = data.accounts.map(profile => `<option value="${escapeHtml(profile.id)}"${profile.id === selected ? " selected" : ""}>${escapeHtml(profile.name)} · ${escapeHtml(profile.email)}</option>`).join("");
+  const options = data.accounts.map(profile => `<option value="${escapeHtml(profile.id)}"${profile.id === selected ? " selected" : ""}>${escapeHtml(profile.name)}</option>`).join("");
   const addLabel = t("新增 Google 账号", "Add Google account");
   const add = `<button type="button" class="switch-add" data-action="add-account" aria-label="${addLabel}" title="${addLabel}">＋</button>`;
   accountSwitch.innerHTML = `
@@ -256,12 +257,12 @@ function renderAccounts() {
     const connected = profile.auth_status === "connected";
     const authAction = connected
       ? button(t("刷新实例", "Refresh instances"), "refresh-account", "compact", profile.id, busy)
-      : button(profile.auth_status === "connecting" ? t("继续连接 Google", "Continue with Google") : t("连接 Google", "Connect to Google"), "connect-account", "compact", profile.id, busy);
+      : button(t("连接 Google", "Connect to Google"), "connect-account", "primary compact", profile.id, busy);
     const rename = button(t("改名", "Rename"), "rename-account", "text compact", profile.id, busy);
     const disconnect = profile.auth_status !== "disconnected" ? button(t("解绑", "Disconnect"), "disconnect-account", "text compact", profile.id, busy) : "";
-    const cli = connected ? "" : button(t("使用 CLI 授权", "Link Colab CLI"), "import-cli", "text compact", profile.id, busy);
+    const options = connected ? "" : button(t("其他连接方式", "Other ways to connect"), "connect-options", "text compact", profile.id, busy);
     const error = profile.auth_error ? `<p class="inline-error account-error" role="status">${escapeHtml(serviceText(profile.auth_error))}</p>` : "";
-    return `<div class="account-row">${identity(profile)}<div class="actions">${authStatus(profile)}${authAction}${cli}${button(t("查看 Colab", "View Colab"), "view-account", "text compact", profile.id)}${rename}${disconnect}</div>${error}</div>`;
+    return `<div class="account-row">${identity(profile)}<div class="actions">${authStatus(profile)}${authAction}${options}${button(t("查看 Colab", "View Colab"), "view-account", "text compact", profile.id)}${rename}${disconnect}</div>${error}</div>`;
   });
   return `<section class="panel"><div class="panel-header"><h2>${t("Google 账号", "Google accounts")}</h2><span class="panel-note">${t(`${data.accounts.length} 个`, String(data.accounts.length))}</span></div>${rows.join("")}</section>`;
 }
@@ -328,7 +329,7 @@ function addAccount() {
 }
 
 function renameAccount(profile) {
-  setDialog(t("修改账号别名", "Rename account"), `${contextRows([[t("Google 邮箱", "Google email"), profile.email]])}
+  setDialog(t("修改账号别名", "Rename account"), `
     <label class="field">${t("账号别名", "Account name")}<input name="name" value="${escapeHtml(profile.name)}" maxlength="48" required></label>`,
   t("保存别名", "Save name"), async fields => {
     await change(accountPath(profile, "/rename"), { name: fields.get("name").trim() });
@@ -347,19 +348,27 @@ function disconnectAccount(profile) {
 
 function watchConnection(id) {
   clearTimeout(oauthWatch);
-  let remaining = 48;
+  const authorization = activeAuthorization;
+  let remaining = 241;
   const tick = async () => {
+    if (activeAuthorization !== authorization) return;
     if (!busy) {
       try {
         if (await readState()) render();
+        if (activeAuthorization !== authorization) return;
         const profile = data.accounts.find(item => item.id === id);
         if (profile?.auth_status === "connected") {
+          activeAuthorization = null;
           announce(t("Google 账号已连接。", "Google account connected."));
           if (dialog.open && dialog.querySelector("[data-oauth-wait]")) dialog.close();
           return;
         }
         if (profile?.auth_status !== "connecting") {
           showAuthProblem(serviceText(profile?.auth_error) || t("授权未完成。请重新连接 Google。", "Authorization is incomplete. Connect to Google again."));
+          const actions = dialogContent.querySelector("[data-oauth-actions]");
+          if (actions) actions.innerHTML = button(t("重新授权", "Authorize again"), "connect-account", "compact", id);
+          const submit = dialogContent.querySelector("[type=submit]");
+          if (submit) submit.disabled = true;
           return;
         }
       } catch {
@@ -371,23 +380,63 @@ function watchConnection(id) {
   oauthWatch = setTimeout(tick, 1500);
 }
 
-function connectAccount(profile) {
+async function openAccountAuthorization(profile, path = "") {
+  const result = await change(accountPath(profile, "/connect"), { client_config_path: path });
+  const candidate = safeUrl(result.open_url);
+  const url = candidate && new URL(candidate);
+  if (!url || url.host !== "accounts.google.com" || url.hash
+    || !["/o/oauth2/auth", "/o/oauth2/v2/auth"].includes(url.pathname)) {
+    throw new Error(t("授权网址校验失败。请重新连接 Google。", "The authorization URL could not be verified. Connect to Google again."));
+  }
+  activeAuthorization = { profile, attempt: result.attempt };
+  const opened = await desktop?.openGoogleAuthorization?.postMessage(url.href).catch(() => false);
+  const usesCode = result.flow === "cli";
+  const instruction = usesCode
+    ? t("在浏览器选择上方账号并同意授权，然后把 Google 页面显示的授权码粘贴到这里。", "Choose the account shown above and approve access in your browser. Paste the code Google displays here.")
+    : t("在浏览器选择上方账号并同意授权。完成后，这里会自动更新。", "Choose the account shown above and approve access in your browser. The app will update automatically.");
+  const context = `<div data-oauth-wait>${contextRows([[t("Google 邮箱", "Google email"), profile.email]])}</div>`;
+  const links = `<div class="actions" data-oauth-actions>${externalLink(opened ? t("重新打开 Google 页面", "Reopen Google") : t("打开 Google 授权页", "Open Google authorization"), url.href, opened ? "text compact" : "compact")}</div>`;
+  const title = t("连接 Google", "Connect to Google");
+  if (usesCode) {
+    setDialog(title, `${context}<p class="panel-note">${instruction}</p>
+      <label class="field">${t("Google 授权码", "Google authorization code")}
+        <input name="code" type="password" autocomplete="off" maxlength="4096" required></label>
+      ${links}`, t("完成连接", "Connect account"), async fields => {
+      await change(accountPath(profile, "/connect/code"), { attempt: result.attempt, code: fields.get("code").trim() });
+      activeAuthorization = null;
+      announce(t("Google 账号已连接。", "Google account connected."));
+    });
+  } else {
+    setDialog(title, `${context}<p class="panel-note">${instruction}</p>${links}`);
+  }
+  watchConnection(profile.id);
+}
+
+async function connectAccount(profile) {
+  busy = true;
+  announce(t("正在打开 Google 授权…", "Opening Google authorization…"));
+  render();
+  try {
+    await openAccountAuthorization(profile);
+    announce("");
+  } catch (error) {
+    announce(error.message, true);
+  } finally {
+    busy = false;
+    render();
+  }
+}
+
+function connectionOptions(profile) {
   const picker = desktop?.chooseOAuthClient
     ? button(t("选择文件…", "Choose file…"), "choose-oauth-client", "compact")
     : "";
-  setDialog(t("连接 Google", "Connect to Google"), `${contextRows([[t("Google 邮箱", "Google email"), profile.email]])}
-    <div class="field"><label for="client-config-path">${t("OAuth 配置文件路径（选填）", "OAuth client file path (optional)")}</label>
-      <div class="path-picker"><input id="client-config-path" name="client_config_path" placeholder="${t("使用本机已配置的客户端", "Use the configured local client")}" autocomplete="off" maxlength="1024">${picker}</div></div>
-    <p class="panel-note">${t("在 Google 授权页面选择上方邮箱。", "Select the email above on the Google authorization page.")}</p>`, t("准备授权", "Prepare authorization"), async fields => {
-    const path = fields.get("client_config_path").trim();
-    const result = await change(accountPath(profile, "/connect"), { ...(path ? { client_config_path: path } : {}), language: appInfo.effectiveLanguage });
-    const candidate = safeUrl(result.open_url);
-    const oauthLink = candidate && new URL(candidate).hostname === "accounts.google.com" ? candidate : null;
-    if (result.open_url && !oauthLink) throw new Error(t("授权网址校验失败。请重新连接账号。", "The authorization URL could not be verified. Reconnect the account."));
-    setDialog(t("前往 Google 授权", "Authorize with Google"), `<div data-oauth-wait>${contextRows([[t("Google 邮箱", "Google email"), profile.email]])}</div>
-      <p class="panel-note">${escapeHtml(serviceText(result.message, "Authorize the account in Google, then wait for the app to update.") || t("在 Google 页面完成授权后，等待连接状态更新。", "Authorize the account in Google, then wait for the app to update."))}</p>
-      <div class="actions">${externalLink(t("打开 Google 授权页", "Open Google authorization"), oauthLink, "primary")}${button(t("读取连接状态", "Check connection"), "check-connection", "", profile.id)}</div>`);
-    watchConnection(profile.id);
+  setDialog(t("其他连接方式", "Other ways to connect"), `${contextRows([[t("Google 邮箱", "Google email"), profile.email]])}
+    <div class="actions">${button(t("导入已有的 Colab CLI 授权", "Import existing Colab CLI authorization"), "import-cli", "", profile.id)}</div>
+    <div class="field"><label for="client-config-path">${t("桌面 OAuth 配置文件", "Desktop OAuth client file")}</label>
+      <div class="path-picker"><input id="client-config-path" name="client_config_path" placeholder="${t("选择 OAuth 客户端 JSON", "Choose an OAuth client JSON file")}" autocomplete="off" maxlength="1024" required>${picker}</div></div>`,
+  t("使用桌面配置", "Connect with client file"), async fields => {
+    await openAccountAuthorization(profile, fields.get("client_config_path").trim());
     return false;
   });
 }
@@ -498,22 +547,6 @@ function showAuthProblem(message) {
   }
 }
 
-async function checkConnection(profile) {
-  try {
-    await readState();
-    render();
-    const current = data.accounts.find(item => item.id === profile.id);
-    if (current?.auth_status === "connected") {
-      if (dialog.open) dialog.close();
-      announce(t("Google 账号已连接。", "Google account connected."));
-      return;
-    }
-    showAuthProblem(serviceText(current?.auth_error) || t("等待 Google 返回授权结果。", "Waiting for Google authorization."));
-  } catch (error) {
-    announce(error.message, true);
-  }
-}
-
 document.addEventListener("click", event => {
   const control = event.target.closest("[data-action]");
   if (!control || control.disabled) return;
@@ -536,8 +569,8 @@ document.addEventListener("click", event => {
     else if (action === "import-cli" && profile) importCli(profile);
     else if (action === "disconnect-account" && profile) disconnectAccount(profile);
     else if (action === "connect-account" && profile) connectAccount(profile);
+    else if (action === "connect-options" && profile) connectionOptions(profile);
     else if (action === "choose-oauth-client") chooseOAuthClient(control);
-    else if (action === "check-connection" && profile) checkConnection(profile);
     else if (action === "refresh-account" && profile) refreshAccount(profile);
     else if (action === "start-instance" && profile) startInstance(profile);
     else if (action === "stop-instance" && account()) stopInstance(account(), id);
@@ -587,6 +620,12 @@ dialog.addEventListener("submit", async event => {
 dialog.addEventListener("cancel", event => { if (busy) event.preventDefault(); });
 dialog.addEventListener("close", () => {
   for (const media of dialog.querySelectorAll("audio, video")) media.pause();
+  clearTimeout(oauthWatch);
+  if (activeAuthorization) {
+    const { profile, attempt } = activeAuthorization;
+    activeAuthorization = null;
+    change(accountPath(profile, "/connect/cancel"), { attempt }).then(render).catch(() => {});
+  }
   dialogSubmit = null;
   if (returnFocus?.isConnected) returnFocus.focus();
 });

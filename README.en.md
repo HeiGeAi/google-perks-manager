@@ -23,7 +23,7 @@ The app follows the preferred macOS language by default. Use **Settings → Lang
 
 | View | What you can do |
 | --- | --- |
-| Accounts | Add each Google account and connect an approved Desktop OAuth client, or import the local authorization from the official Colab CLI. Complete Google’s consent in the browser. |
+| Accounts | Select Connect to Google to open Google’s consent page from the Mac app. Paste the code Google shows after approving the official Colab CLI connection. Under Other ways to connect, you can import an existing Colab CLI grant or use a desktop OAuth client for automatic callback. |
 | Colab | Check compute units, hourly usage, and running instances. Choose the account and runtime before starting or stopping an instance. |
 | Perks | Compare Google AI Pro, Ultra 5x and Ultra 20x, find official redemption links, and record the result for each account. |
 | Studio | Run Breeze TTS 2 or Wan2.2 on a selected Colab GPU, combine audio and video on the Mac, and find or play completed files. |

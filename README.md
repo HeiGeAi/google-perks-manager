@@ -27,7 +27,7 @@ open "/Applications/谷歌羊毛管理器.app"
 
 | 页面 | 操作 |
 | --- | --- |
-| 账号管理 | 为每个 Google 账号建立档案。连接时选择适用的 Google Desktop OAuth 客户端 JSON，在浏览器里完成 Google 授权。现有官方 Colab CLI 授权也可从本机导入。 |
+| 账号管理 | 点击“连接 Google”，Mac App 会打开官方授权页。完成 Colab CLI 授权后，把 Google 显示的授权码粘回 App。“其他连接方式”支持导入已有的 Colab CLI 授权，或使用可自动接收授权结果的桌面 OAuth 配置。 |
 | Colab | 按账号刷新 CU 余额、费率和实例，核对后启动或释放实例。 |
 | 权益 | 对照 Google AI Pro、Ultra 5x 和 Ultra 20x 额度。打开官方权益或领取入口，核对后记录当前账号的结果。 |
 | 创作 | 在当前账号的 Colab GPU 调用 Breeze TTS 2 和 Wan2.2。在本机合成音画、播放、回收和定位作品。 |
@@ -45,7 +45,7 @@ app_agent="/Applications/谷歌羊毛管理器.app/Contents/Resources/backend/Go
 "$app_agent" --agent benefits --plan pro
 ```
 
-Agent 可以发起 Colab 连接并把 Google 的授权页面交给本人完成。领取在 Google 官方页面办理，完成后可按真实结果记回 App。启动或释放实例、云端配音和视频等操作有明确的确认参数。本机 CLI 还可以提交音画合成、核对任务和取回作品。
+已有桌面 OAuth 配置时，Agent 可以发起 Colab 连接并把 Google 的授权页面交给本人完成。也可以在 App 的账号管理里直接连接。领取在 Google 官方页面办理，完成后可按真实结果记回 App。启动或释放实例、云端配音和视频等操作有明确的确认参数。本机 CLI 还可以提交音画合成、核对任务和取回作品。
 
 ## 构建与发布
 
@@ -61,7 +61,7 @@ python3 -B -m unittest discover -s tests
 维护者使用 Python 3.11 或更高版本、OpenSSL 3 和本机发布密钥生成 ZIP、更新清单与独立签名，再把三份文件上传至对应 Git tag 的 GitHub Release。仓库里的 `macos/UpdatePublicKey.txt` 供 App 校验更新。
 
 ```bash
-python3 scripts/prepare_release.py --output dist/release-v0.7.2 \
+python3 scripts/prepare_release.py --output dist/release-v0.7.7 \
   --openssl "$(brew --prefix openssl@3)/bin/openssl" \
   --signing-key "/absolute/path/to/release-ed25519.pem"
 ```

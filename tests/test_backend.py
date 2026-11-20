@@ -8,7 +8,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from urllib.parse import parse_qs, urlsplit
 
 from google_manager.accounts import UserError
@@ -228,7 +228,7 @@ class OAuthTests(unittest.TestCase):
         client = {"client_id": "fixture.apps.googleusercontent.com", "client_secret": "fixture"}
         account = {"email": "a@example.com", "id": "a", "subject": None}
         with patch("google_manager.oauth.read_desktop_client", return_value=client):
-            url = oauth.begin(account, "/fixture", "http://127.0.0.1:18782/oauth/callback")
+            url = oauth.begin(account, "/fixture", "http://127.0.0.1:18782/oauth/callback")["open_url"]
         query = parse_qs(urlsplit(url).query)
         self.assertEqual(urlsplit(url).hostname, "accounts.google.com")
         self.assertEqual(query["login_hint"], ["a@example.com"])
@@ -265,12 +265,66 @@ class OAuthTests(unittest.TestCase):
         oauth = GoogleOAuth()
         account = {"id": "a", "email": "a@example.com"}
         with patch("google_manager.oauth.read_desktop_client", return_value={"client_id": "fixture"}):
-            opened = oauth.begin(account, "fixture", "http://127.0.0.1:18782/oauth/callback")
+            opened = oauth.begin(account, "fixture", "http://127.0.0.1:18782/oauth/callback")["open_url"]
         state = parse_qs(urlsplit(opened).query)["state"][0]
         self.assertEqual(oauth.account_for_state(state), "a")
         oauth.cancel("a")
         with self.assertRaises(UserError):
             oauth.consume(state)
+
+    def test_cli_code_verifies_the_selected_profile_before_saving(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            provider, worker = Mock(), Mock()
+            provider.authorize.return_value = (worker, "https://accounts.google.com/o/oauth2/auth")
+            worker.exchange.return_value = (
+                {"access_token": "fixture-access", "refresh_token": "fixture-refresh", "expires_in": 3600,
+                 "scope": f"openid {COLAB_SCOPE} {EMAIL_SCOPE}"},
+                {"client_id": "fixture.apps.googleusercontent.com", "client_secret": "fixture"},
+            )
+            manager = Manager(Path(tmp) / "data", Path(tmp) / "missing-catalog", colab=provider)
+            self.addCleanup(manager.store.close)
+            self.addCleanup(manager.oauth.close)
+            existing = manager.store.create("Already connected", "existing@example.com")["id"]
+            target = manager.store.create("New profile", "new@example.com")["id"]
+            manager.store.bind(existing, "existing-provider-id", {"access_token": "existing-token"})
+            connect = manager.connect(target, {}, "http://127.0.0.1:18782/oauth/callback")
+            self.assertEqual(connect["flow"], "cli")
+            provider.authorize.assert_called_once_with()
+            with self.assertRaises(UserError):
+                manager.finish_cli_login(existing, connect["attempt"], "fixture-code")
+            worker.exchange.assert_not_called()
+            with patch("google_manager.oauth.google_json", return_value={
+                "email": "existing@example.com", "sub": "existing-provider-id", "email_verified": True,
+            }):
+                with self.assertRaises(UserError):
+                    manager.finish_cli_login(target, connect["attempt"], "fixture-code")
+            self.assertFalse(manager.store.has_credential(target))
+
+            connect = manager.connect(target, {}, "http://127.0.0.1:18782/oauth/callback")
+            with patch("google_manager.oauth.google_json", return_value={
+                "email": "new@example.com", "sub": "new-provider-id", "email_verified": True,
+            }):
+                manager.finish_cli_login(target, connect["attempt"], "fixture-code")
+            self.assertEqual(manager.store.credential(existing)["access_token"], "existing-token")
+            self.assertEqual(manager.store.credential(target)["access_token"], "fixture-access")
+            self.assertNotIn("fixture-access", json.dumps(manager.state()))
+            with self.assertRaises(UserError):
+                manager.finish_cli_login(target, connect["attempt"], "fixture-code")
+
+    def test_cancelling_an_old_attempt_leaves_a_new_cli_login_alive(self):
+        oauth = GoogleOAuth()
+        account = {"id": "a", "email": "a@example.com"}
+        provider, first, second = Mock(), Mock(), Mock()
+        provider.authorize.side_effect = [(first, "google"), (second, "google")]
+        older = oauth.begin_cli(account, provider)
+        newer = oauth.begin_cli(account, provider)
+        first.close.assert_called_once()
+        oauth.cancel("a", older["attempt"])
+        second.close.assert_not_called()
+        self.assertTrue(oauth.connecting("a"))
+        oauth.cancel("a", newer["attempt"])
+        second.close.assert_called_once()
+        self.assertFalse(oauth.connecting("a"))
 
     def test_region_only_from_https_provider_host(self):
         self.assertEqual(region_from_provider("https://gpu.asia-southeast1-a.prod.r.colab.dev"), "asia-southeast1")

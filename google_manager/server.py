@@ -288,8 +288,18 @@ class Handler(BaseHTTPRequestHandler):
         account_id, action = match.groups()
         if action == "connect":
             redirect_uri = f"http://{BIND}:{self.server.server_port}/oauth/callback"
-            url = manager.connect(account_id, body, redirect_uri)
-            return 200, {"open_url": url, "message": "请在 Google 页面完成授权，然后返回账号页。"}
+            return 200, manager.connect(account_id, body, redirect_uri)
+        if action in {"connect/code", "connect/cancel"}:
+            attempt = body.get("attempt")
+            if not isinstance(attempt, str) or not re.fullmatch(r"[a-zA-Z0-9_-]{43}", attempt):
+                raise UserError("授权会话已结束，请重新连接 Google。", 409)
+            if action == "connect/code":
+                code = body.get("code")
+                manager.finish_cli_login(account_id, attempt, code.strip() if isinstance(code, str) else code)
+            else:
+                with manager.store.account_lock(account_id):
+                    manager.oauth.cancel(account_id, attempt)
+            return 200, {}
         if action == "import-cli":
             manager.import_cli(account_id, body.get("token_file"))
             return 200, {"message": "已用 Google 核对邮箱并连接这个账号。"}
@@ -326,7 +336,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if len(state) != 1 or not state[0] or len(code) != 1:
                 raise UserError("登录响应无法核对，请重新连接。")
-            self.server.manager.oauth_callback(state[0], code[0], declined="error" in query or not code[0])
+            with self.server.mutation():
+                self.server.manager.oauth_callback(state[0], code[0], declined="error" in query or not code[0])
             message = ("Google account verified. Return to Google Perks Manager to refresh Colab."
                        if english else "已核对 Google 账号。返回谷歌羊毛管理器刷新 Colab。")
         except UserError as exc:
@@ -455,6 +466,7 @@ def main():
                     print(f"{PRODUCTS['zh-CN']} http://{BIND}:{server.server_port}/", flush=True)
                 server.serve_forever()
         finally:
+            manager.oauth.close()
             manager.store.close()
     except KeyboardInterrupt:
         return 0

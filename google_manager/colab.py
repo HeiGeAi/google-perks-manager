@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from .accounts import UserError
+from .colab_auth import ColabAuthorization
 
 
 GPUS = ("CPU", "T4", "L4", "A100", "H100", "G4")
@@ -69,6 +70,9 @@ class Colab:
 
     def observe(self, token):
         return self._request("observe", token)
+
+    def authorize(self):
+        return ColabAuthorization.start(self.command, REPO)
 
     def start(self, token, gpu, nonce):
         return self._request("start", token, gpu=gpu, nonce=nonce)["instance_id"]

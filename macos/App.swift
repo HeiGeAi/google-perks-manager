@@ -188,7 +188,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()
-        for name in ["chooseOAuthClient", "chooseCliToken", "getAccountSelection", "setAccountSelection",
+        for name in ["openGoogleAuthorization", "chooseOAuthClient", "chooseCliToken", "getAccountSelection", "setAccountSelection",
                      "pickMediaFile", "revealProductionFile", "copyCommunityRemark", "getAppInfo",
                      "setLanguage", "copyAgentPrompt", "checkForUpdate", "downloadUpdate", "installUpdate"] {
             configuration.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: name)
@@ -596,6 +596,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
                 return
             }
             replyHandler(NSNull(), nil)
+        case "openGoogleAuthorization":
+            guard let value = message.body as? String, value.utf8.count <= 16_384,
+                  let url = URL(string: value), url.scheme == "https", url.host == "accounts.google.com",
+                  url.user == nil, url.password == nil, url.port == nil, url.fragment == nil,
+                  ["/o/oauth2/auth", "/o/oauth2/v2/auth"].contains(url.path) else {
+                replyHandler(nil, localized("授权网址校验失败。请重新连接 Google。", "The authorization URL could not be verified. Connect to Google again."))
+                return
+            }
+            replyHandler(NSWorkspace.shared.open(url), nil)
         case "chooseOAuthClient":
             guard message.body is NSNull else {
                 replyHandler(nil, localized("文件选择参数无效。", "Invalid file picker request."))

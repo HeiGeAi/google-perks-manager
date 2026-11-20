@@ -187,7 +187,7 @@ def execute(manager, dispatch, command, body):
     if not account:
         raise UserError("Choose an account ID from the local account list.")
     if command == "connect":
-        code, result = dispatch(account_path + "/connect", {"client_config_path": body.get("client_config")})
+        code, result = dispatch(account_path + "/connect", {"client_config_path": body.get("client_config"), "desktop_only": True})
         return code, {"account_id": account_id, "open_url": without_login_hint(result["open_url"])}
     if command == "import-cli":
         code, _ = dispatch(account_path + "/import-cli", {"token_file": body.get("token_file")})

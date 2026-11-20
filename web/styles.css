@@ -81,8 +81,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .account-item[aria-pressed="true"] { border-color: var(--line); background: var(--surface); color: var(--ink); }
 .avatar { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 10px; background: var(--soft); color: var(--deep); font-weight: 730; line-height: 1; }
 .account-item .avatar { width: 30px; height: 30px; }
-.account-item strong, .account-item small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.account-item small { font-size: 11px; color: var(--muted); font-weight: 470; }
+.account-item strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account-dot { width: 6px; height: 6px; border-radius: 50%; background: transparent; }
 .account-item[aria-pressed="true"] .account-dot { background: var(--deep); }
 .switch-empty { color: var(--muted); padding: 4px 10px; font-size: 13px; }
@@ -139,10 +138,7 @@ main:focus { outline: none; }
 }
 .summary-top { padding: 19px 25px 17px; display: flex; align-items: center; justify-content: space-between; gap: 13px; flex-wrap: wrap; }
 .account-identity { display: flex; min-width: 0; align-items: center; gap: 10px; }
-.account-identity > div { min-width: 0; }
-.account-identity strong, .account-identity small { display: block; overflow-wrap: anywhere; }
-.account-identity strong { font-size: 15px; }
-.account-identity small { font-size: 12px; color: var(--muted); }
+.account-identity strong { min-width: 0; overflow-wrap: anywhere; font-size: 15px; }
 .evidence { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; color: var(--muted); font-size: 12px; }
 .status { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; font-weight: 620; color: var(--muted); white-space: nowrap; }
 .status.good { color: var(--success); }
@@ -170,6 +166,14 @@ main:focus { outline: none; }
   background: linear-gradient(112deg, var(--surface) 32%, #faf1e1);
 }
 .plan-reference .panel-header { padding-block: 14px; }
+.plan-student-note {
+  display: grid; gap: 3px; margin: 0 24px 12px; padding: 10px 12px 7px;
+  border: 1px solid var(--line); border-radius: var(--small-radius);
+  background: #f8f0e2; color: var(--muted); font-size: 12px;
+}
+.plan-student-note strong { margin-inline-end: 6px; color: var(--deep); }
+.plan-student-note .actions { gap: 4px 14px; }
+.plan-student-note .button { min-height: 28px; padding: 2px 0; }
 .plan-comparison { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .plan-comparison th, .plan-comparison td { padding: 9px 16px; text-align: left; border-top: 1px solid var(--line); }
 .plan-comparison th:first-child { width: 31%; padding-left: 24px; overflow-wrap: anywhere; }
@@ -201,6 +205,60 @@ main:focus { outline: none; }
   border: 1px solid var(--line); border-radius: 7px; font-size: 11px; font-weight: 650; white-space: nowrap;
 }
 .plan-badge.exclusive { color: #553915; border-color: #d8bc8f; background: #efdcba; }
+.plan-material.gold {
+  --plan-ink: #563713;
+  --plan-rim: #c6a16a;
+  --plan-active: #926734;
+  --plan-surface: linear-gradient(120deg, transparent 33%, #fff6dcba 39% 46%, transparent 63%),
+    linear-gradient(155deg, #fff9e9 6%, #f6e1b0 36%, #e5ba71 62%, #f6dda6 83%, #dcb163);
+}
+.plan-material.platinum {
+  --plan-ink: #35404a;
+  --plan-rim: #aeb7bf;
+  --plan-active: #687582;
+  --plan-surface: repeating-linear-gradient(0deg, #58657409 0 1px, transparent 1px 3px),
+    linear-gradient(155deg, #fcfdfd 8%, #eaeef1 36%, #d6dce2 58%, #f4f6f7 78%, #dbe0e6);
+}
+.plan-material.diamond {
+  --plan-ink: #244464;
+  --plan-rim: #9bb9d1;
+  --plan-active: #4d799b;
+  --plan-surface: linear-gradient(120deg, transparent 36%, #ffffffc2 37% 47%, transparent 64%),
+    linear-gradient(155deg, #fcfdff 8%, #e8f4fb 42%, #c2d9ee 100%);
+}
+.plan-material,
+.benefit-filters .plan-material:is(:hover, [aria-pressed="true"]) {
+  color: var(--plan-ink); border-color: var(--plan-rim); background: var(--plan-surface);
+  box-shadow: inset 0 1px #fffffff0, inset 0 -1px #4b617013;
+}
+.plan-badge.plan-material {
+  display: inline-flex; align-items: center; gap: 4px;
+  max-width: 100%; padding: 2px 5px; line-height: 1.25; vertical-align: middle;
+}
+.plan-material::before {
+  content: ""; flex: none; width: 1.15em; height: .88em;
+}
+.plan-material.gold::before {
+  height: .73em;
+  clip-path: polygon(19% 0, 81% 0, 100% 69%, 92% 100%, 8% 100%, 0 69%);
+  background: linear-gradient(180deg, #fff5c9aa 0 14%, transparent 15% 68%, #82501b 70% 100%),
+    linear-gradient(111deg, #936325 2%, #d3a146 24%, #ffdf84 42%, #d49c3f 70%, #a9712b);
+}
+.plan-material.platinum::before {
+  height: .71em; border: 1px solid #89949e; border-radius: 2.5px;
+  background: linear-gradient(170deg, #fff 26%, #c7d1d9 50%, #a4b0ba 72%, #e7edf1 92%);
+}
+.plan-material.diamond::before {
+  clip-path: polygon(20% 0, 80% 0, 100% 34%, 50% 100%, 0 34%);
+  background: linear-gradient(180deg, transparent 29%, #f5fcff 32% 37%, transparent 39%),
+    conic-gradient(from 0deg at 50% 34%, #5488ad 0 48deg, #b9dbe9 48deg 117deg,
+      #5a87ad 117deg 146deg, #e6f7ff 146deg 180deg, #a3c3e4 180deg 217deg,
+      #517c9f 217deg 246deg, #acd6eb 246deg 294deg, #e7f8ff 294deg 328deg, #739cbe 328deg);
+}
+.plan-comparison .plan-material { white-space: normal; }
+.benefit-filters .plan-material[aria-pressed="true"] {
+  border-color: var(--plan-active); box-shadow: 0 0 0 1px var(--plan-active), inset 0 1px #fff;
+}
 .benefit-values {
   display: flex; flex-wrap: wrap; gap: 9px 14px; padding: 8px 11px; background: #f7f1e6;
   border: 1px solid var(--line); border-radius: var(--small-radius);
@@ -264,6 +322,7 @@ textarea { resize: vertical; }
   .signature h2 { font-size: clamp(30px, 7vw, 40px); }
   .signature p { font-size: 13px; }
   .panel-header, .account-row, .summary-top, .panel-empty, .state-panel { padding-inline: 16px; }
+  .plan-student-note { margin-inline: 16px; }
   .plan-comparison th:first-child { padding-left: 12px; }
   .plan-comparison th, .plan-comparison td { padding: 7px 8px; font-size: 12px; }
   .plan-comparison strong { font-size: 13px; }

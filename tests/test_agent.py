@@ -124,7 +124,7 @@ class AgentTests(unittest.TestCase):
     def test_oauth_opens_a_google_address_and_keeps_url_out_of_cli_output(self):
         account = self.profile()
         url = "https://accounts.google.com/o/oauth2/v2/auth?state=fixture-state&login_hint=a%40example.test"
-        with patch.object(self.manager, "connect", return_value=url), patch.object(agent, "open_consent") as open_browser:
+        with patch.object(self.manager, "connect", return_value={"open_url": url}), patch.object(agent, "open_consent") as open_browser:
             result, status = self.cli("connect", account, "--confirm")
         self.assertEqual(result, 0)
         self.assertTrue(status["authorization_started"])

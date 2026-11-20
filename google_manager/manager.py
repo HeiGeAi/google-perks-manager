@@ -71,9 +71,25 @@ class Manager:
         with self.store.account_lock(account_id):
             account = self.store.one(account_id)
             config_path = body.get("client_config_path") or self.client_config
-            url = self.oauth.begin(account, config_path, redirect_uri)
+            if config_path:
+                result = self.oauth.begin(account, config_path, redirect_uri)
+            elif body.get("desktop_only"):
+                raise UserError("Open Accounts in the app and click Connect to Google, or pass a configured Desktop OAuth client.")
+            else:
+                result = self.oauth.begin_cli(account, self.colab)
             self.store.update(account_id, auth_error=None)
-            return url
+            return result
+
+    def finish_cli_login(self, account_id, attempt, code):
+        with self.store.account_lock(account_id):
+            account = self.store.one(account_id)
+            try:
+                subject, credential = self.oauth.finish_cli(account, attempt, code)
+                self.store.bind(account_id, subject, credential)
+                self.store.update(account_id, authorization_invalid=False)
+            except UserError as exc:
+                self.store.update(account_id, auth_error=str(exc))
+                raise
 
     def oauth_callback(self, state, code, declined=False):
         account_id = self.oauth.account_for_state(state)
