@@ -25,8 +25,35 @@ trap 'rm -rf "$stage"' EXIT
 # Personal contact assets live in the local data directory, outside the public bundle.
 mkdir "$stage/web"
 /usr/bin/rsync -a --exclude '/brand/wechat-contact.png' --exclude '.DS_Store' "$repo/web/" "$stage/web/"
+# Store relocatable Python build settings in the public bundle.
+mkdir "$stage/python-config"
+"$build/venv/bin/python" - "$stage/python-config" <<'PY'
+import importlib
+import sys
+import sysconfig
+from pathlib import Path
+
+module_name = sysconfig._get_sysconfigdata_name()
+original = importlib.import_module(module_name).build_time_vars
+placeholder = "@PYTHON_BUNDLE_PREFIX@"
+settings = {
+    key: value.replace(sys.base_prefix, placeholder) if isinstance(value, str) else value
+    for key, value in original.items()
+}
+if any(str(Path.home()) in value for value in settings.values() if isinstance(value, str)):
+    raise SystemExit("Python build settings contain a user-specific path.")
+output = Path(sys.argv[1]) / (module_name + ".py")
+source = (
+    "from sys import base_prefix as _prefix\n"
+    f"build_time_vars = {settings!r}\n"
+    f"build_time_vars = {{key: value.replace({placeholder!r}, _prefix) if isinstance(value, str) else value\n"
+    "                   for key, value in build_time_vars.items()}\n"
+)
+compile(source, output.name, "exec")
+output.write_text(source, encoding="utf-8")
+PY
 "$build/venv/bin/python" -m PyInstaller --noconfirm --log-level WARN --onedir \
-    --name GoogleManagerService --paths "$repo" \
+    --name GoogleManagerService --paths "$stage/python-config" --paths "$repo" \
     --specpath "$build" --workpath "$build/freeze" --distpath "$build/payload" \
     --hidden-import google_manager.colab_worker --collect-data colab_cli \
     --add-data "$repo/benefits.json:." --add-data "$stage/web:web" \
