@@ -8,9 +8,9 @@ An independent desktop app for Google plan perks, per-account Colab instances an
 
 These are **real screenshots of the released v0.9.0 app running on an Apple silicon Mac**. The accounts, compute usage, and output files are demo data.
 
-[![Real app walkthrough of Google Perks Manager](docs/media/v0.9.0/demo-preview.gif)](https://github.com/HeiGeAi/google-perks-manager/releases/download/v0.9.0/GooglePerksManager-demo.mp4)
+https://github.com/user-attachments/assets/be1f0ab7-5251-4b4b-8776-283110dc13d9
 
-[Watch the full 35-second walkthrough (MP4, Chinese captions)](https://github.com/HeiGeAi/google-perks-manager/releases/download/v0.9.0/GooglePerksManager-demo.mp4)
+[Download the original MP4 (35 seconds, Chinese captions)](https://github.com/HeiGeAi/google-perks-manager/releases/download/v0.9.0/GooglePerksManager-demo.mp4)
 
 | Google accounts | Colab instances and compute |
 | --- | --- |

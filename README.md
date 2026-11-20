@@ -8,9 +8,9 @@
 
 以下是 **Mac 真机实拍**。画面来自 Apple 芯片 Mac 上运行的正式版 v0.9.0，账号、算力和作品均为演示数据。
 
-[![谷歌羊毛管理器真机演示预览](docs/media/v0.9.0/demo-preview.gif)](https://github.com/HeiGeAi/google-perks-manager/releases/download/v0.9.0/GooglePerksManager-demo.mp4)
+https://github.com/user-attachments/assets/be1f0ab7-5251-4b4b-8776-283110dc13d9
 
-[观看 35 秒完整真机演示（MP4）](https://github.com/HeiGeAi/google-perks-manager/releases/download/v0.9.0/GooglePerksManager-demo.mp4)
+[下载原版 MP4（35 秒）](https://github.com/HeiGeAi/google-perks-manager/releases/download/v0.9.0/GooglePerksManager-demo.mp4)
 
 | 多账号管理 | Colab 实例与算力 |
 | --- | --- |
