@@ -8,7 +8,7 @@
 
 以下是 **Mac 真机实拍**。画面来自 Apple 芯片 Mac 上运行的正式版 v0.9.0，账号、算力和作品均为演示数据。
 
-https://github.com/user-attachments/assets/be1f0ab7-5251-4b4b-8776-283110dc13d9
+https://github.com/user-attachments/assets/da51b224-ed1f-4b49-9867-86d0279f1a79
 
 [下载原版 MP4（35 秒）](https://github.com/HeiGeAi/google-perks-manager/releases/download/v0.9.0/GooglePerksManager-demo.mp4)
 
