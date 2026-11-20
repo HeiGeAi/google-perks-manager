@@ -51,7 +51,7 @@ class FixtureColab:
             "eligible_gpus": [],
         }
 
-    def start(self, token, gpu, nonce):
+    def start(self, token, gpu, nonce, *, high_mem=False):
         self.started.append((token, gpu, nonce))
         if self.failed_once:
             self.failed_once = False
@@ -123,6 +123,27 @@ class BackendTests(unittest.TestCase):
         with self.assertRaises(UserError):
             self.manager.start(a, request)
         self.assertEqual(len(self.provider.started), 2)
+
+    def test_refresh_recovers_allocation_from_original_nonce_without_another_start(self):
+        a, b = self.accounts()
+        request = {"name": "H3 高内存", "gpu": "A100", "high_mem": True, "confirmed": True}
+        self.provider.failed_once = True
+        with self.assertRaises(ProviderError):
+            self.manager.start(a, request)
+        original_nonce = self.provider.started[0][2]
+        self.provider.instances["fixture-a"] = [{"id": "gpu-late", "gpu": "A100", "region": "asia-southeast1"}]
+        with patch.object(self.provider, "inspect_start", create=True, side_effect=ProviderError("核验暂不可用")):
+            observation = self.manager.refresh(a)
+        self.assertEqual(observation["status"], "current")
+        self.assertTrue(self.manager.store.one(a)["operation_pending"])
+        with patch.object(self.provider, "inspect_start", create=True, return_value="gpu-late") as inspect:
+            self.manager.refresh(b)
+            observation = self.manager.refresh(a)
+        inspect.assert_called_once_with("fixture-a", "A100", original_nonce, high_mem=True)
+        self.assertEqual(observation["recovered_launch"], {"name": "H3 高内存", "instance_id": "gpu-late"})
+        self.assertEqual(observation["instances"][0]["name"], "H3 高内存")
+        self.assertIsNone(self.manager.store.one(a)["operation_pending"])
+        self.assertEqual(len(self.provider.started), 1)
 
     def test_gpu_change_reconciles_prior_request_first(self):
         a, _ = self.accounts()

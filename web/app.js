@@ -111,7 +111,11 @@ async function api(path, body) {
     throw new Error(t("本机服务连接失败。请确认谷歌羊毛管理器正在运行。", "Cannot reach the local service. Make sure Google Perks Manager is running."));
   }
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(serviceText(payload.error) || t(`请求失败（HTTP ${response.status}）。`, `Request failed (HTTP ${response.status}).`));
+  if (!response.ok) {
+    const error = new Error(serviceText(payload.error) || t(`请求失败（HTTP ${response.status}）。`, `Request failed (HTTP ${response.status}).`));
+    error.status = response.status;
+    throw error;
+  }
   return payload;
 }
 

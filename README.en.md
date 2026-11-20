@@ -59,6 +59,8 @@ The app follows the system language by default. Use **Settings → Language** to
 
 In **Colab → Start instance → MiniMax H3 video**, the default is **A100 with high system RAM**. Click **Start A100 & deploy** to request the instance, check its assigned hardware and region, and deploy ComfyUI with MiniMax H3. The first deployment downloads and verifies about 42.47 GB of pinned weights. It can reuse verified files on an existing mounted cache.
 
+If Colab assigns a region where H3 cannot be deployed, the app releases the new instance and shows the outcome. After a temporary launch error, it checks the original request and can continue deployment on the assigned instance.
+
 In the Singapore test on 2026-11-21, Colab assigned an A100 with **80 GiB of VRAM and 167.1 GiB of system RAM**. Generating and retrieving a 5.17-second clip with audio took **5m 26s**. From observed allocation to release, the instance ran for **11m 54s** and Colab charged **1.5097 CU**. Hardware and rates depend on what Colab assigns.
 
 G4 (96 GB VRAM on a full GPU) and H100 are selectable. L4 and T4 are preview options with a smaller frame size and sufficient system RAM. [Official CLI hardware options](https://github.com/googlecolab/google-colab-cli/blob/main/docs/01_session_management.md) · [ComfyUI H3 guide](https://blog.comfy.org/p/minimax-h3-day-0-support-in-comfyui)

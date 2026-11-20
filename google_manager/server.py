@@ -323,8 +323,9 @@ class Handler(BaseHTTPRequestHandler):
             manager.store.update(account_id, name=label(body.get("name"), "账号名称", 48))
             return 200, {}
         if action == "refresh":
-            manager.refresh(account_id)
-            return 200, {}
+            observation = manager.refresh(account_id)
+            recovered = observation.get("recovered_launch")
+            return 200, {"recovered_launch": recovered} if recovered else {}
         if action == "instances":
             operation = manager.start(account_id, body)
             return 200, {"operation": operation, "message": operation["message"]}

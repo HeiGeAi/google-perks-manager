@@ -63,6 +63,8 @@ open "/Applications/谷歌羊毛管理器.app"
 
 在 **Colab → 启动实例 → MiniMax H3 视频**，默认选择 **A100 + 高系统内存**。点击 **启动 A100 并部署**，App 会申请实例、核对分配的型号与机房，再部署 ComfyUI 和 MiniMax H3。首次需下载并校验约 42.47 GB 的固定版本权重，已挂载的旧缓存通过校验后可复用。
 
+如果 Colab 分配到无法部署 H3 的机房，App 会释放这次新分配的实例并显示核对结果。遇到暂时的启动错误时，App 会核对原申请，已分配的实例可以接续部署。
+
 2026-11-21 在新加坡实测 A100 分配了 **80 GiB 显存和 167.1 GiB 系统内存**。生成并取回一条 5.17 秒带声视频用时 **5 分 26 秒**，从确认分配到释放实例用时 **11 分 54 秒**，实扣 **1.5097 CU**。实际显存、系统内存和费率由 Colab 分配。
 
 G4（整卡 96 GB 显存）和 H100 可在算力菜单切换，L4 和 T4 可在系统内存充足时用于低显存试跑。 [官方 CLI 硬件选项](https://github.com/googlecolab/google-colab-cli/blob/main/docs/01_session_management.md) · [ComfyUI H3 说明](https://blog.comfy.org/p/minimax-h3-day-0-support-in-comfyui)

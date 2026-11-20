@@ -79,7 +79,8 @@ def execute(payload):
 
     logger = logging.getLogger("google_manager.upstream")
     logger.disabled = True
-    os.environ["COLAB_CLI_ASSIGN_RETRIES"] = "0"
+    # The official client reconciles the same nonce before retrying a transient allocation failure.
+    os.environ["COLAB_CLI_ASSIGN_RETRIES"] = "1"
 
     try:
         with RequestSession() as session:

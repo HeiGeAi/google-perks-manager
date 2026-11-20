@@ -136,10 +136,24 @@ class Manager:
             update["authorization_invalid"] = True
         self.store.update(account["id"], **update)
 
-    def _observe(self, account, token):
+    def _observe(self, account, token, *, reconcile_start=False):
         requested_at = datetime.now(timezone.utc)
         received = self.colab.observe(token)
         names = account["instance_names"]
+        pending = account.get("operation_pending")
+        recovered = None
+        if (reconcile_start and received["instances"] and pending and not pending.get("instance_id")
+                and {"name", "gpu", "nonce"} <= pending.keys()):
+            try:
+                recovered = self.colab.inspect_start(
+                    token, pending["gpu"], pending["nonce"], high_mem=pending.get("high_mem", False),
+                )
+            except ProviderError:
+                # The fresh instance and usage data remains useful if nonce lookup is unavailable.
+                pass
+            if recovered:
+                names = {**names, recovered: pending["name"]}
+                pending = {**pending, "instance_id": recovered, "acknowledged_at": requested_at.isoformat()}
         hardware = {item["id"]: item.get("hardware") for item in account["observation"]["instances"]}
         observation = {
             **empty_observation(),
@@ -153,7 +167,8 @@ class Manager:
             ],
         }
         updates = {"observation": observation, "authorization_invalid": False, "auth_error": None}
-        pending = account.get("operation_pending")
+        if recovered:
+            updates.update(instance_names=names, operation_pending=pending)
         if pending and pending.get("instance_id"):
             visible = any(item["id"] == pending["instance_id"] for item in observation["instances"])
             acknowledged_at = pending.get("acknowledged_at")
@@ -163,6 +178,8 @@ class Manager:
             elif not acknowledged_at:
                 updates["operation_pending"] = {**pending, "acknowledged_at": observation["checked_at"]}
         self.store.update(account["id"], **updates)
+        if recovered:
+            return {**observation, "recovered_launch": {"name": names[recovered], "instance_id": recovered}}
         return observation
 
     def refresh(self, account_id):
@@ -170,7 +187,7 @@ class Manager:
             account = self.store.one(account_id)
             try:
                 token = self.oauth.access(account, self.store)
-                return self._observe(account, token)
+                return self._observe(account, token, reconcile_start=True)
             except UserError as exc:
                 self.record_error(account, exc)
                 raise

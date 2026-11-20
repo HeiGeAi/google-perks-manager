@@ -79,19 +79,48 @@ function startInstance(profile, requested = "h3") {
     if (!forPurpose(purpose).includes(gpu)) throw new Error(t("请选择可申请的算力型号。", "Choose a hardware model for this account."));
     const high = fields.get("memory") === "high";
     const name = fields.get("name").trim() || suggestedInstanceName(profile, purpose, gpu, catalog);
-    const { operation, message } = await change(accountPath(profile, "/instances"), { gpu, high_mem: high, name, confirmed: true });
     const current = () => data.accounts.find(item => item.id === profile.id);
+    let operation, message;
+    try {
+      ({ operation, message } = await change(accountPath(profile, "/instances"), { gpu, high_mem: high, name, confirmed: true }));
+    } catch (error) {
+      if (![502, 504].includes(error.status)) throw error;
+      const refreshed = await change(accountPath(profile, "/refresh"), {}).catch(() => null);
+      const recovered = refreshed?.recovered_launch;
+      if (recovered?.name !== name) throw error;
+      operation = { status: "pending", instance_id: recovered.instance_id };
+      message = t("已核对原申请，请查看实例列表。", "The original request was verified. Check the instance list.");
+    }
     const allocated = () => current()?.observation?.instances?.some(row => row.id === operation.instance_id);
     if (operation.status === "pending" && (data.projects[purpose] || purpose === "tts")) {
-      for (let attempt = 0; attempt < 3 && !allocated(); attempt++) {
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        try { await change(accountPath(profile, "/refresh"), {}); }
-        catch { break; }
+      form.querySelector(".launch-progress").textContent = t("正在等实例出现在 Colab 列表中…", "Waiting for the instance to appear in Colab…");
+      const deadline = performance.now() + 120000;
+      while (!allocated() && current()?.operation_pending && performance.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        try {
+          await change(accountPath(profile, "/refresh"), {});
+        } catch (error) {
+          if (![429, 502, 503, 504].includes(error.status)) break;
+        }
       }
     }
     if (allocated()) {
       const updated = current();
       if (data.projects[purpose]) {
+        const instance = updated.observation.instances.find(row => row.id === operation.instance_id);
+        if (purpose === "h3" && instance.region && !data.h3Regions.includes(instance.region)) {
+          const mismatch = t(`Colab 分配了 ${instance.region}，该机房无法部署 H3。`, `Colab assigned ${instance.region}, where H3 cannot be deployed.`);
+          try {
+            const stopped = await change(accountPath(updated, "/instances/stop"), { instance_id: instance.id, confirmed: true });
+            const result = stopped.operation.status === "confirmed"
+              ? t("这次新实例已释放。", "The new instance was released.")
+              : t("已提交释放，请刷新核对。", "Release was requested. Refresh to verify it.");
+            announce(mismatch + " " + result, true);
+          } catch (error) {
+            announce(mismatch + " " + t("自动释放待核对。", "Automatic release needs verification.") + " " + error.message, true);
+          }
+          return;
+        }
         if (!projectInstances(updated, purpose).some(row => row.id === operation.instance_id)) {
           announce(t("实例已启动。实际机房或型号与项目不匹配，请在 Colab 页核对。", "The instance started. Check its assigned region and hardware in Colab before deploying."), true);
           return;
@@ -153,7 +182,7 @@ function startInstance(profile, requested = "h3") {
     gpuNote.textContent = model ? `${model} · ${t(...launchHardware[model][0])}${t("。", ". ")}${t(...launchHardware[model][1])}` : "";
     nextNote.hidden = !project && key !== "tts";
     nextNote.textContent = key === "h3"
-      ? t("分配后核对机房再部署。首次需约 42.47 GB 权重，保留原 G4 工作流。", "Checks the assigned region before deployment. The original G4 workflow uses about 42.47 GB of weights.")
+      ? t("分配后核对机房。不适用的机房会自动释放本次新实例。首次部署需约 42.47 GB 权重。", "The app checks the assigned region and releases this new instance if the region is unsupported. First deployment downloads about 42.47 GB of weights.")
       : project ? t("分配成功后直接部署。", "Deploys as soon as the instance is ready.") : t("分配成功后打开配音表单。", "Opens the voiceover form when ready.");
     name.placeholder = model ? suggestedInstanceName(profile, key, model, catalog) : "";
     submit.textContent = model ? (project ? t(`启动 ${model} 并部署`, `Start ${model} & deploy`) : t(`启动 ${model}`, `Start ${model}`))
