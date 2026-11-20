@@ -36,11 +36,14 @@ def verify_access(path, private):
     acl = descriptor.GetSecurityDescriptorDacl()
     if acl is None:
         return False
+    # Python's Windows mkdir(0700) grants full access to OWNER RIGHTS.
+    # It is safe here because we already checked the owner of this object.
+    owner_rights = win32security.ConvertStringSidToSid("S-1-3-4")
     for index in range(acl.GetAceCount()):
         header, *_rest, sid = acl.GetAce(index)
         if header[0] == win32security.ACCESS_DENIED_ACE_TYPE:
             continue
-        if header[0] != win32security.ACCESS_ALLOWED_ACE_TYPE or sid not in trusted:
+        if header[0] != win32security.ACCESS_ALLOWED_ACE_TYPE or (sid not in trusted and sid != owner_rights):
             return False
     return True
 
