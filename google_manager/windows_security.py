@@ -11,8 +11,11 @@ import win32security
 
 @lru_cache(maxsize=1)
 def trusted_principals():
-    with win32security.OpenProcessToken(win32api.GetCurrentProcess(), win32con.TOKEN_QUERY) as token:
+    token = win32security.OpenProcessToken(win32api.GetCurrentProcess(), win32con.TOKEN_QUERY)
+    try:
         user, _ = win32security.GetTokenInformation(token, win32security.TokenUser)
+    finally:
+        token.Close()
     return (user, *(win32security.CreateWellKnownSid(kind, None)
                    for kind in (win32security.WinLocalSystemSid, win32security.WinBuiltinAdministratorsSid)))
 
@@ -44,8 +47,11 @@ def verify_access(path, private):
 
 def ensure_process_running(pid):
     try:
-        with win32api.OpenProcess(win32con.SYNCHRONIZE, False, pid) as process:
+        process = win32api.OpenProcess(win32con.SYNCHRONIZE, False, pid)
+        try:
             if win32event.WaitForSingleObject(process, 0) != win32event.WAIT_TIMEOUT:
                 raise ProcessLookupError
+        finally:
+            process.Close()
     except pywintypes.error:
         raise ProcessLookupError from None
