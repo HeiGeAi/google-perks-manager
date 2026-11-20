@@ -62,11 +62,24 @@ internal static class InstallationSmoke
                 """);
             await Execute(view, "startInstance({...account(), auth_status: 'connected'})");
             await Expect(view, """
-                document.querySelector('dialog[open] [name=gpu]')?.value === 'G4' &&
-                document.querySelector('dialog[open] [name=memory]')?.value === 'standard' &&
-                document.querySelector('dialog[open] [name=memory] option[value=high]') &&
+                document.querySelector('dialog[open] [name=gpu]')?.value === 'A100' &&
+                document.querySelector('dialog[open] [name=memory]')?.value === 'high' &&
+                document.querySelector('dialog[open] [type=submit]')?.textContent === 'Start A100 & deploy' &&
+                document.querySelector('#launch-h3-benchmark:not([hidden])')?.textContent.includes('1.5097 CU') &&
                 document.querySelector('dialog[open] [name=legacy_nodes]')
                 """);
+            foreach (var gpu in new[] { "G4", "H100" })
+            {
+                await Execute(view, $$"""
+                    { const select = document.querySelector('dialog [name=gpu]');
+                      select.value = '{{gpu}}'; select.dispatchEvent(new Event('change', {bubbles:true})); }
+                    """);
+                await Expect(view, $$"""
+                    document.querySelector('dialog[open] [name=gpu]')?.value === '{{gpu}}' &&
+                    document.querySelector('dialog[open] [name=memory]')?.value === 'standard' &&
+                    document.querySelector('dialog[open] [type=submit]')?.textContent === 'Start {{gpu}} & deploy'
+                    """);
+            }
             await Execute(view, "document.querySelector('dialog [name=purpose][value=custom]').click()");
             await Expect(view, "document.querySelectorAll('dialog [name=gpu] option').length === 9");
             await Execute(view, "document.querySelector('dialog [data-action=close-dialog]').click()");
@@ -114,7 +127,8 @@ internal static class InstallationSmoke
             {
                 installed = true, nativeWebView2 = true, version,
                 languages = new[] { "zh-CN", "en" }, accountAlias = true, oauthGooglePage = true, tiers = 3,
-                studioFolderAction = true, driveProjectDialog = true, h3LaunchMenu = true, deployableProjects = 5,
+                studioFolderAction = true, driveProjectDialog = true, h3LaunchMenu = true, h3DefaultA100HighRam = true,
+                deployableProjects = 5,
             });
         }
         catch (Exception ex)

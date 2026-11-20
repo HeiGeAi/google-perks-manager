@@ -3,14 +3,14 @@
 from .colab import GPUS, ProviderError
 
 
-H3_GPUS = ("G4", "H100", "A100", "L4", "T4")
+H3_GPUS = ("A100", "G4", "H100", "L4", "T4")
 H3_REGIONS = frozenset({
     "asia-east1", "asia-east2", "asia-northeast1", "asia-northeast2",
     "asia-southeast1", "asia-southeast2", "asia-south1", "asia-south2",
     "australia-southeast1", "southamerica-east1", "europe-west6", "me-west1",
 })
 PROJECTS = {
-    "h3": {"name": "MiniMax H3 + ComfyUI", "gpus": H3_GPUS, "recommended": "G4", "port": 18898,
+    "h3": {"name": "MiniMax H3 + ComfyUI", "gpus": H3_GPUS, "recommended": "A100", "port": 18898,
            "recipe": "h3.json", "license": "https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/LICENSE"},
     "comfy": {"name": "ComfyUI", "gpus": GPUS, "recommended": "L4", "port": 18898,
               "recipe": "wan22.json", "license": "https://github.com/Comfy-Org/ComfyUI/blob/v0.44.2/LICENSE"},

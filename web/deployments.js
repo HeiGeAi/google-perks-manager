@@ -1,7 +1,7 @@
 "use strict";
 
 const projectNotes = {
-  h3: ["用 ComfyUI 生成带声音的视频。原 G4 工作流和 4 个旧节点可选。", "Generate video with stereo audio in ComfyUI. The original G4 workflow and four legacy nodes are available."],
+  h3: ["用 ComfyUI 生成带声音的视频，推荐 A100 高内存。原 G4 工作流和 4 个旧节点可选。", "Generate video with stereo audio in ComfyUI. A100 with high system RAM is recommended. The original G4 workflow and four legacy nodes are available."],
   comfy: ["部署工作台，在浏览器导入自己的工作流。", "Open a private workspace and import your own workflows."],
   wan: ["准备 Wan2.2 5B 模型和 ComfyUI，适合轻量短片。", "Prepare Wan2.2 5B and ComfyUI for lightweight video."],
   breeze: ["准备配音权重和依赖，从创作页生成 WAV。", "Prepare the voiceover weights and dependencies. Generate WAV audio in Studio."],

@@ -13,7 +13,7 @@ const launchHardware = {
   L4: [["24 GB 显存", "24 GB VRAM"], ["可做 H3 低显存试跑，适合日常配音和 Wan2.2。", "Experimental H3 preview, and suitable for everyday voiceover and Wan2.2."]],
   A100: [["40 或 80 GB 显存", "40 or 80 GB VRAM"], ["适合 H3。Google 决定分配 40 GB 或 80 GB，两档以实例实测为准。", "Suitable for H3. Google assigns the 40 GB or 80 GB variant. Check measured hardware after launch."]],
   H100: [["80 GB 显存", "80 GB VRAM"], ["H3 高显存选项，可用于生成时保留更多权重。", "High-memory H3 option with room for more model weights."]],
-  G4: [["96 GB 显存（整卡）", "96 GB VRAM (full GPU)"], ["RTX PRO 6000 Blackwell，H3 生产首选。标准系统内存也可使用整卡显存。", "RTX PRO 6000 Blackwell. First choice for H3 production. Standard system RAM also supports full GPU VRAM."]],
+  G4: [["96 GB 显存（整卡）", "96 GB VRAM (full GPU)"], ["RTX PRO 6000 Blackwell，H3 高显存备选。标准系统内存也可使用整卡显存。", "RTX PRO 6000 Blackwell, a high-VRAM option for H3. Standard system RAM also supports full GPU VRAM."]],
   V5E1: [["TPU v5e（单核）", "TPU v5e (one core)"], ["适合兼容 TPU 的 JAX 或 TensorFlow 任务。H3 使用 NVIDIA GPU。", "For TPU-compatible JAX or TensorFlow jobs. H3 uses an NVIDIA GPU."]],
   V6E1: [["TPU v6e（单核）", "TPU v6e (one core)"], ["适合兼容 TPU 的 JAX 或 TensorFlow 任务。H3 使用 NVIDIA GPU。", "For TPU-compatible JAX or TensorFlow jobs. H3 uses an NVIDIA GPU."]],
 };
@@ -62,7 +62,12 @@ function startInstance(profile, requested = "h3") {
       <label class="field">${t("系统内存（RAM）", "System memory (RAM)")}<select name="memory"></select></label>
     </div>
     <div class="launch-notes" aria-live="polite">
-      <p id="launch-gpu-note" class="panel-note"></p><p id="launch-next" class="panel-note" hidden></p>
+      <p id="launch-gpu-note" class="panel-note"></p>
+      <p id="launch-h3-benchmark" class="panel-note" hidden>${t(
+        "2026-11-21 新加坡 A100 高内存实测。80 GiB 显存，出片并取回 5 分 26 秒，分配至释放 11 分 54 秒，实扣 1.5097 CU。",
+        "High-RAM A100 test in Singapore on 2026-11-21. 80 GiB VRAM, 5m 26s to generate and retrieve the clip, 11m 54s from allocation to release, 1.5097 CU charged.",
+      )}</p>
+      <p id="launch-next" class="panel-note" hidden></p>
     </div>
     ${legacyNodesField(true)}
     <label class="field">${t("实例名称（选填）", "Instance name (optional)")}<input name="name" maxlength="48" autocomplete="off"></label>
@@ -114,6 +119,7 @@ function startInstance(profile, requested = "h3") {
   const legacy = form.querySelector("[data-legacy-nodes]");
   const submit = form.querySelector("button[type=submit]");
   const gpuNote = form.querySelector("#launch-gpu-note");
+  const benchmark = form.querySelector("#launch-h3-benchmark");
   const nextNote = form.querySelector("#launch-next");
   let gpuChoices;
   function updateChoices() {
@@ -138,10 +144,12 @@ function startInstance(profile, requested = "h3") {
     memory.replaceChildren(new Option(high ? t("标准", "Standard") : t("由 Colab 分配", "Assigned by Colab"), "standard"));
     if (high) {
       memory.append(new Option(t("高内存", "High RAM"), "high"));
-      memory.value = key === "h3" ? (model === "T4" ? "high" : "standard") : (prior || "standard");
+      const h3HighRam = model === "A100" || model === "T4";
+      memory.value = key === "h3" ? (h3HighRam ? "high" : "standard") : (prior || "standard");
     }
     memory.disabled = !high;
     gpuNote.hidden = !model;
+    benchmark.hidden = key !== "h3" || model !== "A100";
     gpuNote.textContent = model ? `${model} · ${t(...launchHardware[model][0])}${t("。", ". ")}${t(...launchHardware[model][1])}` : "";
     nextNote.hidden = !project && key !== "tts";
     nextNote.textContent = key === "h3"
