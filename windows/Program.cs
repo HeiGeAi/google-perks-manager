@@ -18,7 +18,10 @@ internal static class Program
         if (args.Length > 0 && args[0] is "probe" or "mux")
             return Media.RunAsync(args).GetAwaiter().GetResult();
 
-        var directory = Path.GetFullPath(Environment.GetEnvironmentVariable("GOOGLE_MANAGER_DATA_DIR")
+        var isolatedDirectory = Environment.GetEnvironmentVariable("GOOGLE_MANAGER_DATA_DIR");
+        var smokeReport = args is ["--verify-installation", var report] && !string.IsNullOrWhiteSpace(isolatedDirectory)
+            ? Path.GetFullPath(report) : null;
+        var directory = Path.GetFullPath(isolatedDirectory
             ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "HeiGeAi", "GooglePerksManager"));
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(directory.ToUpperInvariant())));
@@ -32,7 +35,7 @@ internal static class Program
         }
 
         ApplicationConfiguration.Initialize();
-        using var window = new DesktopWindow(directory);
+        using var window = new DesktopWindow(directory, smokeReport);
         var registration = ThreadPool.RegisterWaitForSingleObject(activate,
             (_, _) => window.BringForward(), null, Timeout.Infinite, false);
         try { Application.Run(window); }
@@ -52,6 +55,7 @@ internal sealed class DesktopWindow : Form
 
     private readonly string dataPath;
     private readonly string preferencePath;
+    private readonly string? smokeReport;
     private readonly string backend = Path.Combine(AppContext.BaseDirectory, "backend", "GoogleManagerService.exe");
     private readonly string updateToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
     private readonly HttpClient local = new(new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false })
@@ -73,9 +77,10 @@ internal sealed class DesktopWindow : Form
         ? (CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "zh" ? "zh-CN" : "en")
         : language;
 
-    internal DesktopWindow(string directory)
+    internal DesktopWindow(string directory, string? verificationReport)
     {
         dataPath = directory;
+        smokeReport = verificationReport;
         preferencePath = Path.Combine(directory, "desktop-preferences.json");
         ReadPreferences();
         Text = WindowTitle();
@@ -185,6 +190,8 @@ internal sealed class DesktopWindow : Form
             view.CoreWebView2.Navigate(origin.AbsoluteUri);
             view.Visible = true;
             status.Visible = false;
+            if (smokeReport is not null)
+                await InstallationSmoke.RunAsync(view.CoreWebView2, smokeReport, Version);
         }
         catch (WebView2RuntimeNotFoundException)
         {

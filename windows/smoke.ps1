@@ -16,28 +16,18 @@ $env:PYTHONUTF8 = "1"
 $env:GOOGLE_MANAGER_STARTUP_LOG = Join-Path $scratch "startup.log"
 $guide = & $service --agent guide | ConvertFrom-Json
 if (!$guide.commands.state) { throw "The installed service could not run its Agent CLI." }
-$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
-$listener.Start()
-$port = $listener.LocalEndpoint.Port
-$listener.Stop()
-$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$port"
-$desktop = Start-Process $app -PassThru
+$reportFile = Join-Path $scratch "windows-smoke.json"
+$desktop = Start-Process $app -ArgumentList ('--verify-installation "' + $reportFile + '"') -PassThru
 try {
-    $debug = "http://127.0.0.1:$port"
-    $ready = $false
-    for ($attempt = 0; $attempt -lt 24; $attempt++) {
+    for ($attempt = 0; $attempt -lt 120; $attempt++) {
         if ($desktop.HasExited) { throw "The installed app exited before displaying a window." }
-        try {
-            $metadata = Invoke-RestMethod "$debug/json/version" -TimeoutSec 1 -NoProxy
-            if ($metadata.webSocketDebuggerUrl) { $ready = $true; break }
-        } catch { Start-Sleep -Milliseconds 500 }
+        if (Test-Path $reportFile) { break }
+        Start-Sleep -Milliseconds 500
     }
-    if (!$ready) { throw "The installed native window did not initialize WebView2." }
-    Write-Host "Windows native WebView2 is reachable."
-
-    npm install --prefix $scratch --no-audit --no-fund playwright-core@1.65.1
-    $env:GM_PLAYWRIGHT = Join-Path $scratch "node_modules/playwright-core"
-    node (Join-Path $PSScriptRoot "smoke.cjs") $debug $repo
+    if (!(Test-Path $reportFile)) { throw "The installed app did not report its native UI checks." }
+    $report = Get-Content $reportFile -Raw | ConvertFrom-Json -AsHashtable
+    if (!$report.nativeWebView2) { throw "Failed native UI check: $($report.error) ($($report.reason))." }
+    Write-Host "Windows native UI checks passed."
 
     $rows = & $service --agent state | ConvertFrom-Json
     if ($rows.accounts.Count -ne 1 -or $rows.accounts[0].name -ne "Windows test") { throw "The packaged Agent CLI did not read the test profile." }
@@ -58,12 +48,11 @@ try {
     if ($probe.streams.codec_type -notcontains "audio" -or $probe.streams.codec_type -notcontains "video") {
         throw "The Windows export must contain both audio and video."
     }
-    $reportFile = Join-Path $repo "dist/windows-smoke.json"
-    $report = Get-Content $reportFile -Raw | ConvertFrom-Json -AsHashtable
     $report.agentCli = $true
     $report.mediaExport = @{ audio = $true; video = $true; seconds = $job.artifact.seconds }
     $report.installerSHA256 = (Get-FileHash $package -Algorithm SHA256).Hash.ToLowerInvariant()
-    $report | ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 $reportFile
+    $report | ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 (Join-Path $repo "dist/windows-smoke.json")
+    Copy-Item (Join-Path $scratch "windows-smoke.png") (Join-Path $repo "dist/windows-smoke.png")
 } finally {
     if (Test-Path $env:GOOGLE_MANAGER_STARTUP_LOG) {
         Get-Content $env:GOOGLE_MANAGER_STARTUP_LOG
