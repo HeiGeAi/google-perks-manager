@@ -58,22 +58,11 @@ private struct ReleaseVersion: Comparable {
     }
 }
 
-private struct GitHubRelease: Decodable {
-    struct Asset: Decodable {
-        let name: String
-        let size: Int
-    }
-
-    let tag_name: String
-    let draft: Bool
-    let prerelease: Bool
-    let assets: [Asset]
-}
-
 private struct UpdateManifest: Decodable {
     let version: String
     let asset: String
     let sha256: String
+    let size: Int?
     let bundle_id: String
 }
 
@@ -83,7 +72,7 @@ private final class ReleaseRedirects: NSObject, URLSessionTaskDelegate {
         guard let url else { return false }
         return url.scheme == "https" && (url.port == nil || url.port == 443) &&
             url.user == nil && url.password == nil && [
-                "api.github.com", "github.com", "release-assets.githubusercontent.com", "objects.githubusercontent.com"
+                "github.com", "release-assets.githubusercontent.com", "objects.githubusercontent.com"
             ].contains(url.host)
     }
 
@@ -132,7 +121,7 @@ actor ReleaseUpdater {
     private static let signatureName = "GooglePerksManager-update.sig"
     private static let bundleName = "谷歌羊毛管理器.app"
     private static let maxArchiveSize = 1_500_000_000
-    private static let api = URL(string: "https://api.github.com/repos/\(repository)/releases/latest")!
+    private static let releases = URL(string: "https://github.com/\(repository)/releases")!
 
     private let session: URLSession
     private let key: Curve25519.Signing.PublicKey?
@@ -184,40 +173,33 @@ actor ReleaseUpdater {
         busy = true
         defer { busy = false }
 
-        var request = URLRequest(url: Self.api)
-        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-        request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
-        let releaseData = try await read(request, limit: 512 * 1024)
-        guard let release = try? JSONDecoder().decode(GitHubRelease.self, from: releaseData),
-              !release.draft, !release.prerelease, release.tag_name.first == "v" else {
+        // Public release assets work without GitHub credentials or the REST API's shared IP quota.
+        let latestManifest = Self.releases.appendingPathComponent("latest").appendingPathComponent("download")
+            .appendingPathComponent(Self.manifestName)
+        let data = try await read(URLRequest(url: latestManifest), limit: 16 * 1024)
+        guard let manifest = try? JSONDecoder().decode(UpdateManifest.self, from: data),
+              let latest = ReleaseVersion(manifest.version), manifest.asset == Self.archiveName,
+              manifest.bundle_id == Self.bundleID, manifest.sha256.count == 64,
+              manifest.sha256.utf8.allSatisfy({ 48...57 ~= $0 || 97...102 ~= $0 }) else {
             throw UpdateFailure.invalidRelease
         }
-        let version = String(release.tag_name.dropFirst())
-        guard let latest = ReleaseVersion(version) else { throw UpdateFailure.invalidRelease }
-        let releaseURL = "https://github.com/\(Self.repository)/releases/tag/\(release.tag_name)"
+        let version = manifest.version
+        let tag = "v" + version
+        let base = Self.releases.appendingPathComponent("download").appendingPathComponent(tag)
+        let signatureURL = base.appendingPathComponent(Self.signatureName)
+        let signature = try await read(URLRequest(url: signatureURL), limit: 64)
+        guard signature.count == 64, key.isValidSignature(signature, for: data) else {
+            throw UpdateFailure.invalidSignature
+        }
+
+        let releaseURL = Self.releases.appendingPathComponent("tag").appendingPathComponent(tag).absoluteString
         if latest <= current {
             clearDownload()
             verified = nil
             return ["status": "current", "currentVersion": currentVersion, "version": version, "releaseURL": releaseURL]
         }
 
-        let archiveAssets = release.assets.filter { $0.name == Self.archiveName }
-        guard archiveAssets.count == 1, let archiveSize = archiveAssets.first?.size,
-              (1...Self.maxArchiveSize).contains(archiveSize),
-              release.assets.filter({ $0.name == Self.manifestName }).count == 1,
-              release.assets.filter({ $0.name == Self.signatureName }).count == 1 else {
-            throw UpdateFailure.invalidRelease
-        }
-        let base = URL(string: "https://github.com/\(Self.repository)/releases/download/\(release.tag_name)")!
-        async let manifestData = read(URLRequest(url: base.appendingPathComponent(Self.manifestName)), limit: 16 * 1024)
-        async let signatureData = read(URLRequest(url: base.appendingPathComponent(Self.signatureName)), limit: 64)
-        let (data, signature) = try await (manifestData, signatureData)
-        guard signature.count == 64, key.isValidSignature(signature, for: data) else {
-            throw UpdateFailure.invalidSignature
-        }
-        guard let manifest = try? JSONDecoder().decode(UpdateManifest.self, from: data),
-              manifest.version == version, manifest.asset == Self.archiveName, manifest.bundle_id == Self.bundleID,
-              manifest.sha256.count == 64, manifest.sha256.utf8.allSatisfy({ 48...57 ~= $0 || 97...102 ~= $0 }) else {
+        guard let archiveSize = manifest.size, (1...Self.maxArchiveSize).contains(archiveSize) else {
             throw UpdateFailure.invalidRelease
         }
         if verified?.sha256 != manifest.sha256 || verified?.version != version { clearDownload() }

@@ -8,6 +8,8 @@
 
 下载 Releases 中的 `GooglePerksManager-macOS-arm64.zip`，解压后将“谷歌羊毛管理器”拖进“应用程序”。支持 macOS 14 或更新的 Apple 芯片 Mac。
 
+当前公开包采用临时代码签名和项目更新签名。首次打开从 GitHub 下载的应用时，macOS 可能显示开发者验证提示。[Apple 的首次打开说明](https://support.apple.com/zh-cn/102445)
+
 ```bash
 open "/Applications/谷歌羊毛管理器.app"
 ```
@@ -52,7 +54,7 @@ python3 -B -m unittest discover -s tests
 维护者使用 Python 3.11 或更高版本、OpenSSL 3 和本机发布密钥生成 ZIP、更新清单与独立签名，再把三份文件上传至对应 Git tag 的 GitHub Release。仓库里的 `macos/UpdatePublicKey.txt` 供 App 校验更新。
 
 ```bash
-python3 scripts/prepare_release.py --output dist/release-v0.7.0 \
+python3 scripts/prepare_release.py --output dist/release-v0.7.1 \
   --openssl "$(brew --prefix openssl@3)/bin/openssl" \
   --signing-key "/absolute/path/to/release-ed25519.pem"
 ```

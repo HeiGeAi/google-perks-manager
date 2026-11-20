@@ -87,7 +87,8 @@ def main():
         with archive.open("rb") as source:
             digest = hashlib.file_digest(source, "sha256").hexdigest()
         manifest.write_text(json.dumps({
-            "version": version, "asset": ZIP_NAME, "sha256": digest, "bundle_id": BUNDLE_ID,
+            "version": version, "asset": ZIP_NAME, "sha256": digest, "size": archive.stat().st_size,
+            "bundle_id": BUNDLE_ID,
         }, indent=2) + "\n", encoding="utf-8")
         command(args.openssl, "pkeyutl", "-sign", "-inkey", signer, "-rawin", "-in", manifest, "-out", signature)
         public_key.write_bytes(public_der)

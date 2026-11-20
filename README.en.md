@@ -8,6 +8,8 @@ An independent macOS app for Google plan perks, per-account Colab instances and 
 
 Download `GooglePerksManager-macOS-arm64.zip`, extract it, and move `谷歌羊毛管理器.app` to Applications. The app supports Apple silicon Macs running macOS 14 or later.
 
+Public builds currently use ad hoc code signing and an upstream update signature. macOS can show a developer verification notice when you first open an app downloaded from GitHub. [Apple’s first-launch guidance](https://support.apple.com/en-us/102445)
+
 The app follows the preferred macOS language by default. Use **Settings → Language** to pick English, Simplified Chinese, or the system language. Settings also shows the current version and offers **Check for updates**, **Download update**, and **Install update**. The app verifies the release signature and archive before installation, then opens the new version.
 
 ## Main views
