@@ -67,6 +67,7 @@ internal sealed class DesktopWindow : Form
     private string? availableVersion;
     private bool installing;
     private bool initialized;
+    private readonly string? startupLog = Environment.GetEnvironmentVariable("GOOGLE_MANAGER_STARTUP_LOG");
     private string Version => typeof(DesktopWindow).Assembly.GetName().Version!.ToString(3);
     private string EffectiveLanguage => language == "system"
         ? (CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "zh" ? "zh-CN" : "en")
@@ -158,17 +159,24 @@ internal sealed class DesktopWindow : Form
             var start = ServiceCommand("--port", "0", "--announce-port");
             start.Environment["GOOGLE_MANAGER_UPDATE_TOKEN"] = updateToken;
             service = Process.Start(start) ?? throw new InvalidOperationException();
-            service.ErrorDataReceived += (_, _) => { };
+            service.ErrorDataReceived += (_, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data)) TraceStartup("Local service stderr: " + e.Data);
+            };
             service.BeginErrorReadLine();
             var output = await service.StandardOutput.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(20));
             if (output is null || !output.StartsWith("GM_PORT=") || !int.TryParse(output[8..], out var port)
                 || port is < 1 or > 65535) throw new InvalidOperationException();
             origin = new Uri($"http://127.0.0.1:{port}/");
+            TraceStartup("Local service ready.");
             if (!initialized)
             {
+                view.Visible = true;
+                TraceStartup($"WebView2 Runtime: {CoreWebView2Environment.GetAvailableBrowserVersionString()}");
                 var environment = await CoreWebView2Environment.CreateAsync(
                     userDataFolder: Path.Combine(dataPath, "WebView"));
                 await view.EnsureCoreWebView2Async(environment);
+                TraceStartup("Initialized native WebView2.");
                 ConfigureView();
                 initialized = true;
             }
@@ -180,18 +188,30 @@ internal sealed class DesktopWindow : Form
         }
         catch (WebView2RuntimeNotFoundException)
         {
+            TraceStartup("WebView2 Runtime was not found.");
             StopService();
+            view.Visible = false;
             status.Text = T("请安装 Microsoft Edge WebView2 Runtime 后重试。", "Install Microsoft Edge WebView2 Runtime and retry.");
             retry.Text = T("重试", "Retry");
             retry.Visible = true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            TraceStartup($"Startup failed: {ex.GetType().Name} (0x{ex.HResult:X8}).");
             StopService();
+            view.Visible = false;
             status.Text = T("无法启动本机工作区。请检查应用安装和当前用户的数据目录。", "Could not start the local workspace. Check the installation and your app data folder.");
             retry.Text = T("重试", "Retry");
             retry.Visible = true;
         }
+    }
+
+    private void TraceStartup(string message)
+    {
+        if (string.IsNullOrWhiteSpace(startupLog)) return;
+        try { File.AppendAllText(startupLog, message + Environment.NewLine); }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
     }
 
     private void ConfigureView()

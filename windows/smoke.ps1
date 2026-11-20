@@ -7,11 +7,15 @@ $package = Join-Path $repo "dist/GooglePerksManager-Windows-x64-Setup.exe"
 $installation = Join-Path $scratch "Application"
 $installer = Start-Process $package -ArgumentList ('/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR="' + $installation + '"') -Wait -PassThru
 if ($installer.ExitCode -ne 0) { throw "Installer exited with $($installer.ExitCode)." }
+Write-Host "Windows setup completed."
 
 $app = Join-Path $installation "GooglePerksManager.exe"
 $service = Join-Path $installation "backend/GoogleManagerService.exe"
 $env:GOOGLE_MANAGER_DATA_DIR = Join-Path $scratch "LocalData"
 $env:PYTHONUTF8 = "1"
+$env:GOOGLE_MANAGER_STARTUP_LOG = Join-Path $scratch "startup.log"
+$guide = & $service --agent guide | ConvertFrom-Json
+if (!$guide.commands.state) { throw "The installed service could not run its Agent CLI." }
 $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
 $listener.Start()
 $port = $listener.LocalEndpoint.Port
@@ -21,14 +25,15 @@ $desktop = Start-Process $app -PassThru
 try {
     $debug = "http://127.0.0.1:$port"
     $ready = $false
-    for ($attempt = 0; $attempt -lt 60; $attempt++) {
+    for ($attempt = 0; $attempt -lt 24; $attempt++) {
         if ($desktop.HasExited) { throw "The installed app exited before displaying a window." }
         try {
-            $metadata = Invoke-RestMethod "$debug/json/version" -TimeoutSec 2
+            $metadata = Invoke-RestMethod "$debug/json/version" -TimeoutSec 1 -NoProxy
             if ($metadata.webSocketDebuggerUrl) { $ready = $true; break }
         } catch { Start-Sleep -Milliseconds 500 }
     }
     if (!$ready) { throw "The installed native window did not initialize WebView2." }
+    Write-Host "Windows native WebView2 is reachable."
 
     npm install --prefix $scratch --no-audit --no-fund playwright-core@1.65.1
     $env:GM_PLAYWRIGHT = Join-Path $scratch "node_modules/playwright-core"
@@ -60,6 +65,9 @@ try {
     $report.installerSHA256 = (Get-FileHash $package -Algorithm SHA256).Hash.ToLowerInvariant()
     $report | ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 $reportFile
 } finally {
+    if (Test-Path $env:GOOGLE_MANAGER_STARTUP_LOG) {
+        Get-Content $env:GOOGLE_MANAGER_STARTUP_LOG
+    }
     if (!$desktop.HasExited) {
         $null = $desktop.CloseMainWindow()
         if (!$desktop.WaitForExit(4000)) { $desktop.Kill($true) }
