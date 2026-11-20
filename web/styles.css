@@ -297,6 +297,32 @@ textarea { resize: vertical; }
 .dialog-context dd { overflow-wrap: anywhere; }
 .confirmation { display: flex; align-items: flex-start; gap: 8px; }
 .confirmation input { flex: none; width: 16px; height: 16px; margin-top: 3px; accent-color: var(--deep); }
+dialog:has(.launch-purpose) { width: min(calc(100% - 26px), 570px); }
+dialog:has(.launch-purpose) .dialog-context { grid-template-columns: auto minmax(0, 1fr); }
+.launch-purpose { border: 0; margin: 0; padding: 0; min-width: 0; }
+.launch-purpose legend { font-weight: 680; padding: 0; margin-bottom: 7px; }
+.launch-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.launch-choice {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 8px;
+  border: 1px solid var(--line); border-radius: var(--small-radius); min-width: 0;
+  padding: 10px 11px; background: var(--surface); cursor: pointer;
+}
+.launch-choice:has(input:checked) {
+  border-color: var(--gold-line); background: linear-gradient(117deg, var(--soft), var(--surface));
+}
+.launch-choice:has(input:disabled) { color: var(--muted); cursor: default; }
+.launch-choice input { accent-color: var(--deep); width: 15px; height: 15px; margin: 3px 0 0; }
+.launch-choice-copy { display: grid; gap: 2px; line-height: 1.35; }
+.launch-choice-copy strong { font-weight: 680; }
+.launch-choice-copy small { color: var(--muted); font-size: 12px; }
+.launch-chip {
+  border-radius: 5px; padding: 1px 6px; color: var(--deep); background: var(--soft);
+  font-size: 11px; font-weight: 680; white-space: nowrap;
+}
+.launch-notes { display: grid; gap: 3px; padding-left: 10px; border-left: 2px solid var(--gold-line); }
+.launch-notes:not(:has(p:not([hidden]))), dialog:not([aria-busy="true"]) .launch-progress { display: none; }
+.launch-progress, #launch-next { color: var(--deep); }
+@media (max-width: 460px) { .launch-choices { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 1100px) {
   .app-shell { grid-template-columns: 214px minmax(0, 1fr); }
   .main-inner { padding-inline: 30px; }

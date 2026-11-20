@@ -50,7 +50,7 @@ The app follows the system language by default. Use **Settings → Language** to
 | View | What you can do |
 | --- | --- |
 | Accounts | Select Connect to Google to open Google’s consent page. Paste the code Google shows after approving the official Colab CLI connection. Under Other ways to connect, you can import an existing Colab CLI grant or use a desktop OAuth client for automatic callback. |
-| Colab | Check compute units, hourly usage, and running instances. Choose the account and runtime before starting or stopping an instance. |
+| Colab | Check each account’s CU balance, usage rate and instances. Launch recommended hardware for video, voiceover or notebooks, or choose a model yourself. |
 | Perks | Compare Google AI Pro, Ultra 5x and Ultra 20x, check student and trial restrictions, and record results for each account. |
 | Studio | Run Breeze TTS 2 or Wan2.2 on a selected Colab GPU. Play, reveal, or remix outputs saved on this computer from any account. |
 

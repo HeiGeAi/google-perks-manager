@@ -234,7 +234,7 @@ function renderColab(profile) {
   const connected = profile.auth_status === "connected";
   const current = connected && observation.status === "current";
   const actions = connected
-    ? button(t("刷新实例", "Refresh instances"), "refresh-account", "", profile.id, busy) + button(t("启动实例", "Start instance"), "start-instance", "primary", profile.id, busy || !current || !choices.length)
+    ? button(t("刷新实例", "Refresh instances"), "refresh-account", "", profile.id, busy) + button(t("启动实例", "Start instance"), "start-instance", "primary", profile.id, busy || !choices.length)
     : button(profile.auth_status === "connecting" ? t("继续连接 Google", "Continue with Google") : t("连接 Google", "Connect to Google"), "connect-account", "primary", profile.id, busy);
   pageTitle(actions);
   const checkedAt = formatTime(observation.checked_at);
@@ -473,21 +473,6 @@ async function chooseOAuthClient(control) {
   } finally {
     control.disabled = false;
   }
-}
-
-function startInstance(profile) {
-  const observation = profile.observation || {};
-  const choices = allowedChoices(observation);
-  if (profile.auth_status !== "connected" || observation.status !== "current" || !choices.length) return;
-  const options = choices.map(gpu => `<option value="${escapeHtml(gpu)}">${escapeHtml(gpu)}</option>`).join("");
-  setDialog(t("启动 Colab 实例", "Start a Colab instance"), `${contextRows([[t("Google 邮箱", "Google email"), profile.email]])}
-    <label class="field">${t("实例名称", "Instance name")}<input name="name" maxlength="48" autocomplete="off" required></label>
-    <label class="field">${t("算力类型", "GPU type")}<select name="gpu" required>${options}</select><small>${t("可申请类型和实际费用以 Google 返回为准。", "Google determines GPU availability and the actual usage rate.")}</small></label>
-    <label class="confirmation"><input type="checkbox" name="confirmed" required><span>${t("我确认使用这个账号申请实例并接受实际算力费用。", "I confirm this account and accept the actual compute charges.")}</span></label>`,
-  t("确认启动", "Start instance"), async fields => {
-    const result = await change(accountPath(profile, "/instances"), { gpu: fields.get("gpu"), name: fields.get("name").trim(), confirmed: fields.get("confirmed") === "on" });
-    announce(serviceText(result.message, "Launch request completed. Check the instance status.") || t("启动请求已完成。请查看当前账号的实例状态。", "Launch request completed. Check the instance status."));
-  });
 }
 
 function stopInstance(profile, instanceId) {

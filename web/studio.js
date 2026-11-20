@@ -79,7 +79,7 @@ function availableInstances(profile) {
 function studioTarget(profile) {
   const instances = availableInstances(profile);
   if (instances.length) return escapeHtml(profile.name) + ' <span class="studio-target-count">' + t(instances.length + " 台可选", instances.length + " available") + '</span>';
-  if (profile?.auth_status === "connected") return t("请在 Colab 页刷新或启动实例", "Refresh or start an instance in Colab");
+  if (profile?.auth_status === "connected") return t("新建时可直接启动 Colab 实例", "Start a Colab instance when you begin");
   return t("连接 Google 后选择实例", "Connect Google to select an instance");
 }
 
@@ -103,14 +103,14 @@ function renderStudio(profile) {
     '</span></div><div id="studio-jobs">' + renderStudioJobs() + '</div></section></div>';
 }
 
-function studioContext(profile, kind) {
+function studioContext(profile, kind, preferredInstance) {
   const items = availableInstances(profile);
-  const options = items.map(item => '<option value="' + escapeHtml(item.id) + '">' +
+  const options = items.map(item => '<option value="' + escapeHtml(item.id) + '"' + (item.id === preferredInstance ? ' selected' : '') + '>' +
     escapeHtml([item.name || item.id, item.gpu, item.region].filter(Boolean).join(" · ")) + '</option>').join("");
   if (!options) {
     return `<p class="panel-note">${t('请在 <a href="#colab" data-action="studio-colab">Colab</a> 页刷新或启动实例。', 'Refresh or start an instance in <a href="#colab" data-action="studio-colab">Colab</a>.')}</p>`;
   }
-  return contextRows([[t("Google 邮箱", "Google email"), profile.email]]) +
+  return contextRows([[t("账号", "Account"), profile.name]]) +
     '<label class="field">' + t("Colab 实例", "Colab instance") + '<select name="instance_id">'  + options + '</select></label>' +
     (kind === "video" ? `<p class="panel-note">${t("首次在此实例生成需下载约 18.15 GB 模型文件。", "The first run on this instance downloads about 18.15 GB of model files.")}</p>` :
       `<p class="panel-note">${t("首次准备约 7.68 GB 模型文件。Breeze TTS 2 自托管适用于研究和非商用。", "The first run downloads about 7.68 GB of model files. Self-hosted Breeze TTS 2 is licensed for research and non-commercial use.")}</p>`) +
@@ -146,29 +146,30 @@ function syncStudioDialog(form) {
   }
 }
 
-function openStudio(kind, profile) {
-  const jobId = crypto.randomUUID().replaceAll("-", "");
+function openStudio(kind, profile, preferredInstance) {
   if (!Object.hasOwn(productionKinds, kind)) return;
   if (kind !== "mux" && !availableInstances(profile).length) {
+    if (profile && startInstance(profile, kind)) return;
     const engine = kind === "tts" ? "Breeze TTS 2" : "Wan2.2";
     setDialog(t("选择 Colab GPU", "Choose a Colab GPU"), `<p>${engine} ${t("需要 L4、G4、A100 或 H100 实例。", "requires an L4, G4, A100, or H100 instance.")}</p>
       <div class="actions"><a class="button primary" href="#colab" data-action="studio-colab">${t("管理 Colab 实例", "Manage Colab instances")}</a></div>`);
     return;
   }
+  const jobId = crypto.randomUUID().replaceAll("-", "");
   const title = `<label class="field">${t("作品名称", "Output title")}<input name="title" maxlength="80" required autocomplete="off"></label>`;
   let fields;
   if (kind === "tts") {
     fields = '<input type="hidden" name="mode" value="colab">' +
       `<label class="field">${t("配音文稿", "Voiceover script")}<textarea name="text" maxlength="600" rows="4" required></textarea></label>` +
       `<label class="field">${t("音色和语气（选填）", "Voice and tone (optional)")}<textarea name="instruction" maxlength="400" rows="2"></textarea></label>` +
-      '<div data-cloud-fields>' + studioContext(profile, kind) + '</div>';
+      '<div data-cloud-fields>' + studioContext(profile, kind, preferredInstance) + '</div>';
   } else if (kind === "video") {
     fields = '<input type="hidden" name="mode" value="colab">' +
       `<label class="field">${t("画面描述", "Scene description")}<textarea name="text" maxlength="1800" rows="4" required></textarea></label>` +
       `<div class="studio-form-grid"><label class="field">${t("画幅", "Aspect ratio")}<select name="ratio"><option value="landscape">${t("横屏", "Landscape")}</option>
       <option value="portrait">${t("竖屏", "Portrait")}</option></select></label><label class="field">${t("时长", "Duration")}<select name="seconds">
       <option value="5">${t("约 5 秒", "About 5 seconds")}</option><option value="3">${t("约 3 秒", "About 3 seconds")}</option></select></label></div>` +
-      '<div data-cloud-fields>' + studioContext(profile, kind) + '</div>';
+      '<div data-cloud-fields>' + studioContext(profile, kind, preferredInstance) + '</div>';
   } else {
     fields = '<input type="hidden" name="mode" value="mac">' + studioFileInput("video") + studioFileInput("audio") +
       `<p class="panel-note">${t("画面按配音时长循环或裁短，成片保存为 MP4。", "The video loops or trims to the length of the voiceover and saves as MP4.")}</p>`;
