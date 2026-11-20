@@ -4,6 +4,13 @@
 
 An independent macOS app for Google plan perks, per-account Colab instances and compute units, cloud voice and video jobs, and local output files.
 
+## WeChat community
+
+| Scan to join the group | Scan to add Heige on WeChat |
+| --- | --- |
+| <img src="web/brand/wechat-group.png" width="208" alt="Google Perks Manager WeChat group QR code"> | <img src="web/brand/wechat-personal.png" width="208" alt="Heige's personal WeChat QR code"> |
+| Valid before November 27, 2026 | Include **谷歌交流群** in your friend request |
+
 ## Install
 
 Download `GooglePerksManager-macOS-arm64.zip`, extract it, and move `谷歌羊毛管理器.app` to Applications. The app supports Apple silicon Macs running macOS 14 or later.

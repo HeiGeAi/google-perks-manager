@@ -4,6 +4,13 @@
 
 一个独立的 macOS App，按账号管理 Google AI 权益、Colab 实例与算力、云端配音、短视频和本机作品。
 
+## 交流群与个人微信
+
+| 微信扫码进交流群 | 扫码添加黑哥微信 |
+| --- | --- |
+| <img src="web/brand/wechat-group.png" width="208" alt="谷歌羊毛管理器交流群二维码"> | <img src="web/brand/wechat-personal.png" width="208" alt="黑哥的个人微信二维码"> |
+| 2026 年 11 月 27 日前有效 | 好友申请请备注 **谷歌交流群** |
+
 ## 安装和语言
 
 下载 Releases 中的 `GooglePerksManager-macOS-arm64.zip`，解压后将“谷歌羊毛管理器”拖进“应用程序”。支持 macOS 14 或更新的 Apple 芯片 Mac。
@@ -54,7 +61,7 @@ python3 -B -m unittest discover -s tests
 维护者使用 Python 3.11 或更高版本、OpenSSL 3 和本机发布密钥生成 ZIP、更新清单与独立签名，再把三份文件上传至对应 Git tag 的 GitHub Release。仓库里的 `macos/UpdatePublicKey.txt` 供 App 校验更新。
 
 ```bash
-python3 scripts/prepare_release.py --output dist/release-v0.7.1 \
+python3 scripts/prepare_release.py --output dist/release-v0.7.2 \
   --openssl "$(brew --prefix openssl@3)/bin/openssl" \
   --signing-key "/absolute/path/to/release-ed25519.pem"
 ```

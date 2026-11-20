@@ -90,27 +90,57 @@ function renderSettings() {
           ${externalLink(t("打开主页", "Open profile"), heigeDouyin, "compact")}
         </div>
       </section>
-      ${appInfo.hasContactQr ? renderCommunity() : ""}
+      ${renderCommunity()}
     </div>
   </div>`;
-  const community = document.querySelector(".community-card");
-  if (community) community.querySelector("img").decode().catch(() => { community.hidden = true; });
+  const localQr = document.querySelector(".community-card .personal-qr");
+  localQr?.querySelector("img").decode().catch(() => {
+    appInfo.hasContactQr = false;
+    localQr.outerHTML = personalQr();
+  });
 }
 
-function personalQr(label) {
-  return `<span class="personal-qr"><img src="/brand/wechat-contact.png" width="972" height="1444" alt="${escapeHtml(label)}"></span>`;
+function groupQr() {
+  return `<img class="community-qr" src="/brand/wechat-group.png" width="560" height="560" alt="${t("谷歌羊毛管理器交流群二维码", "Google Perks Manager WeChat group QR code")}">`;
+}
+
+function groupValidity() {
+  return t("2026 年 11 月 27 日前有效", "Valid before November 27, 2026");
+}
+
+function personalQr() {
+  const label = t("黑哥的个人微信二维码", "Heige’s personal WeChat QR code");
+  return appInfo.hasContactQr
+    ? `<span class="personal-qr"><img src="/brand/wechat-contact.png" width="972" height="1444" alt="${label}"></span>`
+    : `<img class="community-qr" src="/brand/wechat-personal.png" width="784" height="784" alt="${label}">`;
+}
+
+function friendRequestNote() {
+  return `<p class="panel-note">${t("好友申请请备注", "Friend request note")} <strong>${communityRemark}</strong></p>
+    <div class="community-actions">
+      ${button(t("复制备注", "Copy note"), "settings-copy", "compact")}
+      <span class="copy-status" role="status"></span>
+    </div>`;
 }
 
 function renderCommunity() {
   return `<section class="panel community-card" aria-labelledby="community-title">
-    <h2 id="community-title">${t("谷歌交流群", "Google community")}</h2>
-    <button type="button" class="community-qr-button" data-action="settings-enlarge" aria-label="${t("放大个人微信二维码", "Enlarge the personal WeChat QR code")}">
-      ${personalQr(t("微信扫码添加黑哥为好友", "Scan to add Heige on WeChat"))}
-    </button>
-    <p>${t("微信扫码添加黑哥，好友申请请备注", "Scan to add Heige on WeChat and include the note")} <strong>${communityRemark}</strong>${t("。", ".")}</p>
-    <div class="community-actions">
-      ${button(t("复制备注", "Copy note"), "settings-copy", "compact")}
-      <span class="copy-status" role="status"></span>
+    <h2 id="community-title">${t("微信交流", "WeChat community")}</h2>
+    <div class="community-options">
+      <section class="community-option" aria-labelledby="group-qr-title">
+        <h3 id="group-qr-title">${t("扫码直接进群", "Join the group")}</h3>
+        <button type="button" class="community-qr-button" data-action="settings-enlarge-group" aria-label="${t("放大群聊二维码", "Enlarge the group QR code")}">
+          ${groupQr()}
+        </button>
+        <p class="panel-note">${groupValidity()}</p>
+      </section>
+      <section class="community-option" aria-labelledby="personal-qr-title">
+        <h3 id="personal-qr-title">${t("添加黑哥微信", "Add Heige on WeChat")}</h3>
+        <button type="button" class="community-qr-button" data-action="settings-enlarge-personal" aria-label="${t("放大个人微信二维码", "Enlarge the personal WeChat QR code")}">
+          ${personalQr()}
+        </button>
+        ${friendRequestNote()}
+      </section>
     </div>
   </section>`;
 }
@@ -179,13 +209,15 @@ function settingsAction(action, control) {
       <img class="official-qr" src="/brand/wechat-official.png" width="640" height="640" alt="${t("问问黑哥微信公众号二维码", "Ask Heige WeChat Official Account QR code")}">
       ${externalLink(t("打开公众号", "Open on WeChat"), heigeWechat, "text compact")}
     </div>`);
-  } else if (action === "settings-enlarge" && appInfo.hasContactQr) {
+  } else if (action === "settings-enlarge-group") {
+    setDialog(t("谷歌羊毛管理器交流群", "Google Perks Manager WeChat group"), `<div class="qr-dialog">
+      ${groupQr()}
+      <p class="panel-note">${groupValidity()}</p>
+    </div>`);
+  } else if (action === "settings-enlarge-personal") {
     setDialog(t("黑哥的个人微信", "Heige on WeChat"), `<div class="qr-dialog">
-      ${personalQr(t("黑哥个人微信二维码", "Heige’s personal WeChat QR code"))}
-      <p>${t("好友申请请备注", "Include this note in your friend request")} <strong>${communityRemark}</strong></p>
-      <div class="community-actions">${button(t("复制备注", "Copy note"), "settings-copy", "compact")}
-        <span class="copy-status" role="status"></span>
-      </div>
+      ${personalQr()}
+      ${friendRequestNote()}
     </div>`);
   } else if (action === "settings-copy") {
     copyCommunityRemark(control);
