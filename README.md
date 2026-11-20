@@ -4,6 +4,29 @@
 
 一个独立的桌面 App，按账号管理 Google AI 权益、Colab 实例与算力、云端配音、短视频和本机作品。
 
+## 真机界面与演示
+
+以下是 **Mac 真机实拍**。画面来自 Apple 芯片 Mac 上运行的正式版 v0.9.0，账号、算力和作品均为演示数据。
+
+[![谷歌羊毛管理器真机演示预览](docs/media/v0.9.0/demo-preview.gif)](https://github.com/HeiGeAi/google-perks-manager/releases/download/v0.9.0/GooglePerksManager-demo.mp4)
+
+[观看 35 秒完整真机演示（MP4）](https://github.com/HeiGeAi/google-perks-manager/releases/download/v0.9.0/GooglePerksManager-demo.mp4)
+
+| 多账号管理 | Colab 实例与算力 |
+| --- | --- |
+| [<img src="docs/media/v0.9.0/accounts.jpg" width="440" alt="账号管理页，两个演示 Google 账号以备注名显示">](docs/media/v0.9.0/accounts.jpg) | [<img src="docs/media/v0.9.0/colab.jpg" width="440" alt="Colab 页显示演示账号的余额、费率与 GPU 实例">](docs/media/v0.9.0/colab.jpg) |
+| 以备注识别账号，查看连接状态并快速切换。 | 按账号查看算力余额、当前费率和 GPU 实例。 |
+
+| Pro 与 Ultra 权益 | 配音、视频和本机作品 |
+| --- | --- |
+| [<img src="docs/media/v0.9.0/perks.jpg" width="440" alt="权益页并列显示 Pro、Ultra 5x 和 Ultra 20x 档位及学生优惠说明">](docs/media/v0.9.0/perks.jpg) | [<img src="docs/media/v0.9.0/studio.jpg" width="440" alt="创作页展示 Colab 配音、文生视频、音画合成和作品操作">](docs/media/v0.9.0/studio.jpg) |
+| 对照档位额度和学生优惠，打开官方领取及核验入口。 | 云端配音、短视频和音画合成集中在创作页。本机作品可跨账号查看、播放及打开文件夹。 |
+
+| 按项目转存云盘 | 一键接入 Agent |
+| --- | --- |
+| [<img src="docs/media/v0.9.0/drive.jpg" width="440" alt="转存云盘弹窗，使用演示账号选择项目文件夹">](docs/media/v0.9.0/drive.jpg) | [<img src="docs/media/v0.9.0/agent.jpg" width="440" alt="Agent 接入页面及可复制的本机提示词">](docs/media/v0.9.0/agent.jpg) |
+| 选目标账号和项目，将作品复制到 Google Drive 同步目录。 | 复制提示词，接入能在同一台电脑运行命令的 Agent。 |
+
 ## 交流群与个人微信
 
 | 微信扫码进交流群 | 扫码添加黑哥微信 |
