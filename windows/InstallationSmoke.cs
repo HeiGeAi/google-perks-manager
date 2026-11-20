@@ -68,7 +68,7 @@ internal static class InstallationSmoke
                 document.querySelector('dialog[open] [name=legacy_nodes]')
                 """);
             await Execute(view, "document.querySelector('dialog [name=purpose][value=custom]').click()");
-            await Expect(view, "document.querySelectorAll('dialog [name=gpu] option[value]:not([value=""])').length === 8");
+            await Expect(view, "document.querySelectorAll('dialog [name=gpu] option').length === 9");
             await Execute(view, "document.querySelector('dialog [data-action=close-dialog]').click()");
             await Expect(view, "!document.querySelector('dialog[open]')");
 
