@@ -61,7 +61,7 @@ open "/Applications/谷歌羊毛管理器.app"
 
 ### 部署 MiniMax H3 和 ComfyUI
 
-在 **Colab → 启动实例 → MiniMax H3 视频** 选择 G4、H100、A100、L4 或 T4。G4 整卡为 96 GB 显存。A100 显存与系统内存以实例实测为准。G4 是原工作流的验收机型，L4 与 T4 是低显存试跑选项，需要实例提供足够的系统内存。选择 **启动并部署** 后，App 会核对实际型号与机房，再下载并校验约 42.47 GB 的固定版本权重。已挂载的旧缓存会先校验再复用。 [官方 CLI 硬件选项](https://github.com/googlecolab/google-colab-cli/blob/main/docs/01_session_management.md) · [ComfyUI H3 说明](https://blog.comfy.org/p/minimax-h3-day-0-support-in-comfyui)
+在 **Colab → 启动实例 → MiniMax H3 视频** 选择 G4、H100、A100、L4 或 T4。默认使用 G4 和标准系统内存。G4 整卡有 96 GB 显存，高系统内存的申请以 Google 返回为准。A100 显存与系统内存以实例实测为准。G4 是原工作流的验收机型，L4 与 T4 是低显存试跑选项，需要实例提供足够的系统内存。选择 **启动并部署** 后，App 会核对实际型号与机房，再下载并校验约 42.47 GB 的固定版本权重。已挂载的旧缓存会先校验再复用。 [官方 CLI 硬件选项](https://github.com/googlecolab/google-colab-cli/blob/main/docs/01_session_management.md) · [ComfyUI H3 说明](https://blog.comfy.org/p/minimax-h3-day-0-support-in-comfyui)
 
 部署记录显示就绪后，可以在 **创作** 提交 H3 短片，也可以打开私有 ComfyUI，使用首帧或首尾帧生成视频。旧工作流的四个节点可随 H3 安装，在 ComfyUI 导入对应工作流。旧项目使用的额外 LoRA 或放大权重需要按原工作流准备。App 会校验并取回在创作页提交的作品。直接在 ComfyUI 生成的作品请在释放实例前下载。H3 开放权重受社区许可证限制，可在项目卡查看。 [H3 社区许可证](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/LICENSE)
 

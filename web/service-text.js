@@ -66,6 +66,7 @@ const serviceTextEnglish = {
   "Google 暂未分配实例，请核对该账号的容量和配额。": "Google has not allocated an instance. Check this account’s capacity and quota.",
   "Google 拒绝 Colab 授权。请核对这个账号的权限和同意范围。": "Google rejected Colab authorization. Check this account’s access and approved scopes.",
   "Google 暂未接受操作，请核对实例与账号配额。": "Google did not accept the operation. Check the instance and account quota.",
+  "Google 拒绝了这个型号的高系统内存请求。可切换为标准内存再试。": "Google rejected the high-RAM request for this model. You can retry with standard system RAM.",
   "无法确认 Colab 的返回，请刷新该账号后核对。": "Could not verify Colab’s response. Refresh the account to check.",
   "Colab 组件发生异常，请刷新该账号后核对。": "The Colab client encountered an error. Refresh the account to check.",
   "权益目录暂时无法读取。": "Could not read the perks catalog.",

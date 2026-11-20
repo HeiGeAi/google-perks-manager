@@ -13,7 +13,7 @@ const launchHardware = {
   L4: [["24 GB 显存", "24 GB VRAM"], ["可做 H3 低显存试跑，适合日常配音和 Wan2.2。", "Experimental H3 preview, and suitable for everyday voiceover and Wan2.2."]],
   A100: [["40 或 80 GB 显存", "40 or 80 GB VRAM"], ["适合 H3。Google 决定分配 40 GB 或 80 GB，两档以实例实测为准。", "Suitable for H3. Google assigns the 40 GB or 80 GB variant. Check measured hardware after launch."]],
   H100: [["80 GB 显存", "80 GB VRAM"], ["H3 高显存选项，可用于生成时保留更多权重。", "High-memory H3 option with room for more model weights."]],
-  G4: [["96 GB 显存（整卡）", "96 GB VRAM (full GPU)"], ["RTX PRO 6000 Blackwell，H3 生产首选，历史工作流已在 G4 出片。", "RTX PRO 6000 Blackwell. First choice for H3 production, with a historically verified workflow."]],
+  G4: [["96 GB 显存（整卡）", "96 GB VRAM (full GPU)"], ["RTX PRO 6000 Blackwell，H3 生产首选。标准系统内存也可使用整卡显存。", "RTX PRO 6000 Blackwell. First choice for H3 production. Standard system RAM also supports full GPU VRAM."]],
   V5E1: [["TPU v5e（单核）", "TPU v5e (one core)"], ["适合兼容 TPU 的 JAX 或 TensorFlow 任务。H3 使用 NVIDIA GPU。", "For TPU-compatible JAX or TensorFlow jobs. H3 uses an NVIDIA GPU."]],
   V6E1: [["TPU v6e（单核）", "TPU v6e (one core)"], ["适合兼容 TPU 的 JAX 或 TensorFlow 任务。H3 使用 NVIDIA GPU。", "For TPU-compatible JAX or TensorFlow jobs. H3 uses an NVIDIA GPU."]],
 };
@@ -138,7 +138,7 @@ function startInstance(profile, requested = "h3") {
     memory.replaceChildren(new Option(high ? t("标准", "Standard") : t("由 Colab 分配", "Assigned by Colab"), "standard"));
     if (high) {
       memory.append(new Option(t("高内存", "High RAM"), "high"));
-      memory.value = key === "h3" ? "high" : (prior || "standard");
+      memory.value = key === "h3" ? (model === "T4" ? "high" : "standard") : (prior || "standard");
     }
     memory.disabled = !high;
     gpuNote.hidden = !model;

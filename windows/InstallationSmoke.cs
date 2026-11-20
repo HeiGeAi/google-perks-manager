@@ -53,6 +53,25 @@ internal static class InstallationSmoke
             await Execute(view, "location.hash = 'agent'");
             await Expect(view, """document.querySelector('#agent-prompt')?.value.includes("GoogleManagerService.exe' --agent guide --language en")""");
 
+            stage = "Colab runtime and deployment menu";
+            await Execute(view, "location.hash = 'apps'");
+            await Expect(view, """
+                document.querySelectorAll('.deployment-card').length === 5 &&
+                document.querySelector('[data-action=deploy-project][data-id=h3]') &&
+                window.googlePerksDesktop.openPrivateEditor
+                """);
+            await Execute(view, "startInstance({...account(), auth_status: 'connected'})");
+            await Expect(view, """
+                document.querySelector('dialog[open] [name=gpu]')?.value === 'G4' &&
+                document.querySelector('dialog[open] [name=memory]')?.value === 'standard' &&
+                document.querySelector('dialog[open] [name=memory] option[value=high]') &&
+                document.querySelector('dialog[open] [name=legacy_nodes]')
+                """);
+            await Execute(view, "document.querySelector('dialog [name=purpose][value=custom]').click()");
+            await Expect(view, "document.querySelectorAll('dialog [name=gpu] option[value]:not([value=""])').length === 8");
+            await Execute(view, "document.querySelector('dialog [data-action=close-dialog]').click()");
+            await Expect(view, "!document.querySelector('dialog[open]')");
+
             stage = "perks catalog and filters";
             await Execute(view, "location.hash = 'benefits'");
             await Expect(view, "document.querySelector('#student-pro-note')?.textContent.includes('Google AI Pro student offers')");
@@ -95,7 +114,7 @@ internal static class InstallationSmoke
             {
                 installed = true, nativeWebView2 = true, version,
                 languages = new[] { "zh-CN", "en" }, accountAlias = true, oauthGooglePage = true, tiers = 3,
-                studioFolderAction = true, driveProjectDialog = true,
+                studioFolderAction = true, driveProjectDialog = true, h3LaunchMenu = true, deployableProjects = 5,
             });
         }
         catch (Exception ex)

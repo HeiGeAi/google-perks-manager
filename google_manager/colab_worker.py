@@ -128,6 +128,8 @@ def execute(payload):
         status = exc.response.status_code
         if status in {401, 403}:
             return {"error": "Google 拒绝 Colab 授权。请核对这个账号的权限和同意范围。", "status": status}
+        if status == 400 and action == "start" and payload.get("high_mem") is True:
+            return {"error": "Google 拒绝了这个型号的高系统内存请求。可切换为标准内存再试。", "status": status}
         if status in {400, 404, 409, 412, 429}:
             return {"error": "Google 暂未接受操作，请核对实例与账号配额。", "status": status}
         return {"error": f"Colab 本次返回 HTTP {status}，请刷新该账号核对。", "status": 502, "uncertain": True}
