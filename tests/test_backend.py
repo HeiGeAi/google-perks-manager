@@ -2,6 +2,7 @@ import base64
 import hashlib
 import http.client
 import json
+import os
 import tempfile
 import threading
 import unittest
@@ -14,6 +15,7 @@ from urllib.parse import parse_qs, urlsplit
 from google_manager.accounts import UserError
 from google_manager.colab import Colab, ProviderError
 from google_manager.colab_worker import observe, region_from_provider
+from google_manager.local_files import owned
 from google_manager.manager import ACK_VISIBILITY_SECONDS, Manager
 from google_manager.oauth import COLAB_SCOPE, EMAIL_SCOPE, GoogleOAuth
 from google_manager.server import LocalServer
@@ -182,7 +184,10 @@ class BackendTests(unittest.TestCase):
         self.assertEqual(self.manager.store.one(a)["benefit_status"]["drive"]["source"], "user")
         self.assertEqual(self.manager.store.one(b)["benefit_status"], {})
         auth_file = self.manager.store.profiles / a / "oauth.json"
-        self.assertEqual(auth_file.stat().st_mode & 0o777, 0o600)
+        if os.name != "nt":
+            self.assertEqual(auth_file.stat().st_mode & 0o777, 0o600)
+        else:
+            self.assertTrue(owned(auth_file, auth_file.stat(), private=True))
         self.assertNotIn("fixture-a", json.dumps(state))
         self.assertEqual(state["accounts"][0]["observation"]["status"], "unverified")
 

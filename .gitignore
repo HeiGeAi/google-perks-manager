@@ -8,4 +8,6 @@ client_secret*.json
 Google-Manager-Data/
 dist/
 build/
+/windows/bin/
+/windows/obj/
 /web/brand/wechat-contact.png

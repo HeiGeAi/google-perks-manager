@@ -3,11 +3,12 @@
 import json
 import logging
 import os
-import select
 import subprocess
 import sys
+import threading
 from datetime import datetime, timezone
 from importlib.resources import files
+from queue import Empty, Queue
 from types import SimpleNamespace
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -19,6 +20,25 @@ MAX_CODE = 4096
 MAX_PACKET = 16 * 1024
 UNAVAILABLE = "无法启动 Colab 官方授权，请重新连接 Google。"
 REJECTED = "Google 未接受这次授权码。请重新授权并复制新码。"
+
+
+def read_line(stream, limit, timeout):
+    result = Queue(maxsize=1)
+
+    def read():
+        try:
+            result.put(stream.readline(limit))
+        except (OSError, ValueError):
+            result.put(None)
+
+    threading.Thread(target=read, daemon=True).start()
+    try:
+        line = result.get(timeout=timeout)
+    except Empty:
+        raise EOFError from None
+    if not line:
+        raise EOFError
+    return line
 
 
 def google_authorization_url(url):
@@ -43,16 +63,15 @@ class ColabAuthorization:
             process = subprocess.Popen(
                 [*command, "--authorize"], cwd=cwd, stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
         except OSError:
             raise UserError(UNAVAILABLE, 503) from None
         worker = cls(process)
         try:
-            if not select.select([process.stdout], [], [], 12)[0]:
-                raise ValueError
-            packet = json.loads(process.stdout.readline(MAX_PACKET))
+            packet = json.loads(read_line(process.stdout, MAX_PACKET, 12))
             return worker, google_authorization_url(packet["url"])
-        except (OSError, ValueError, KeyError, TypeError):
+        except (EOFError, OSError, ValueError, KeyError, TypeError):
             worker.close()
             raise UserError(UNAVAILABLE, 503) from None
 
@@ -89,9 +108,7 @@ def run_authorization():
             print(json.dumps({"url": url}), flush=True)
 
     def read_code(_prompt):
-        if not select.select([sys.stdin], [], [], LIFETIME)[0]:
-            raise EOFError
-        code = sys.stdin.readline(MAX_CODE + 2).strip()
+        code = read_line(sys.stdin, MAX_CODE + 2, LIFETIME).strip()
         if not 0 < len(code) <= MAX_CODE:
             raise ValueError
         return code

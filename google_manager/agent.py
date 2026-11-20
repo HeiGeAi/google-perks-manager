@@ -15,6 +15,7 @@ from urllib.parse import urlsplit
 
 from . import __version__
 from .accounts import UserError, read_private_json
+from .local_files import ensure_process_running
 from .agent_service import AGENT_HEADER, CONFIRM_COMMANDS, PLAN_TIERS, RUNTIME_FILE
 from .colab import GPUS
 
@@ -141,7 +142,7 @@ def discovery(data_dir):
         if (type(port) is not int or not 1 <= port <= 65535 or type(pid) is not int or pid <= 1
                 or not isinstance(token, str) or not re.fullmatch(r"[A-Za-z0-9_-]{43}", token)):
             raise ValueError
-        os.kill(pid, 0)
+        ensure_process_running(pid)
         return port, token
     except (OSError, ValueError, KeyError, TypeError, UserError):
         raise UserError("Open Google Perks Manager on this Mac and use the app's local data directory.", 503) from None

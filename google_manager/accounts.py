@@ -1,6 +1,5 @@
 """Private local account records and independently scoped credentials."""
 
-import fcntl
 import json
 import os
 import re
@@ -10,6 +9,8 @@ import threading
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+
+from .local_files import open_local_fd, owned
 
 
 class UserError(Exception):
@@ -46,15 +47,15 @@ def label(value, name, limit):
 def private_directory(path):
     path.mkdir(mode=0o700, parents=True, exist_ok=True)
     info = path.lstat()
-    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
+    if not stat.S_ISDIR(info.st_mode) or not owned(path, info, private=True):
         raise UserError("请选择当前用户专用的数据目录，目录权限应为 700。")
 
 
 def read_private_json(path):
-    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    fd = open_local_fd(path)
     with os.fdopen(fd, "r", encoding="utf-8") as handle:
         info = os.fstat(handle.fileno())
-        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
+        if not stat.S_ISREG(info.st_mode) or not owned(path, info, private=True):
             raise UserError("本机数据文件的权限不符合要求。")
         return json.load(handle)
 
@@ -93,9 +94,16 @@ class AccountStore:
         private_directory(self.profiles)
         self.lock = threading.RLock()
         self._locks = {}
-        lock_fd = os.open(self.root / ".instance.lock", os.O_CREAT | os.O_NOFOLLOW | os.O_RDWR, 0o600)
+        lock_fd = open_local_fd(self.root / ".instance.lock", os.O_CREAT | os.O_RDWR)
         try:
-            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            if os.name == "nt":
+                import msvcrt
+
+                msvcrt.locking(lock_fd, msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:
             os.close(lock_fd)
             raise UserError("这个数据目录已有一个谷歌管理器在运行。") from None

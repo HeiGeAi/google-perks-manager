@@ -52,6 +52,7 @@ class Colab:
                 capture_output=True,
                 timeout=120,
                 check=False,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
         except subprocess.TimeoutExpired:
             raise ProviderError("Colab 响应超时，请刷新这个账号后核对实例。", 504, uncertain=True) from None

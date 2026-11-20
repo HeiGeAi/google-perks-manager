@@ -1,6 +1,7 @@
 import http.client
 import io
 import json
+import os
 import tempfile
 import threading
 import unittest
@@ -11,6 +12,7 @@ from unittest.mock import patch
 from google_manager import agent
 from google_manager.accounts import private_directory, timestamp, write_private_json
 from google_manager.agent_service import AGENT_HEADER, RUNTIME_FILE
+from google_manager.local_files import owned
 from google_manager.manager import Manager
 from google_manager.server import CONTACT_ROUTE, PRODUCT_ID, UPDATE_HEADER, LocalServer
 
@@ -78,7 +80,11 @@ class AgentTests(unittest.TestCase):
         self.manager.store.update(account, observation={**obs, "status": "current", "checked_at": timestamp(),
                                                         "balance_cu": 12, "hourly_cu": 3})
         descriptor = self.data / RUNTIME_FILE
-        self.assertEqual(descriptor.stat().st_mode & 0o777, 0o600)
+        if os.name != "nt":
+            self.assertEqual(descriptor.stat().st_mode & 0o777, 0o600)
+        else:
+            with descriptor.open(encoding="utf-8") as handle:
+                self.assertTrue(owned(descriptor, os.fstat(handle.fileno()), private=True))
         self.assertEqual(self.post("/api/agent", {"command": "state"})[0], 403)
         self.assertEqual(self.post("/api/agent", {"command": "state"},
                                    **{AGENT_HEADER: self.server.agent_token, "Origin": "https://outside.test"})[0], 403)

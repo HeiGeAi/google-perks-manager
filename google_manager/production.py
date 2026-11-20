@@ -14,6 +14,7 @@ import wave
 from pathlib import Path
 
 from .accounts import UserError, label, private_directory, read_object, timestamp, write_private_json
+from .local_files import open_local_fd
 from .remote_jobs import CREATION_GPUS, ID
 
 ACTIVE = {"queued", "running", "remote", "check"}
@@ -27,7 +28,8 @@ def media_tool():
     if override:
         return Path(override)
     if getattr(sys, "frozen", False):
-        return Path(sys.executable).parent.parent / "GoogleManagerMedia"
+        name = "GooglePerksManager.exe" if os.name == "nt" else "GoogleManagerMedia"
+        return Path(sys.executable).parent.parent / name
     dist = Path(__file__).resolve().parent.parent / "dist"
     relative = "Contents/Resources/GoogleManagerMedia"
     current = dist / "谷歌羊毛管理器.app" / relative
@@ -50,6 +52,7 @@ def validate_output(path, kind):
     try:
         result = subprocess.run(
             [str(media_tool()), "probe", str(path)], capture_output=True, timeout=20, check=True,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
         probe = json.loads(result.stdout)
         return {"seconds": round(probe["seconds"], 3), "width": probe["width"], "height": probe["height"]}
@@ -71,13 +74,14 @@ def copy_local_media(selected, folder, field, extensions):
         raise UserError("请选择支持的本机媒体文件。")
     destination = folder / (field + src.suffix.lower())
     try:
-        src_fd = os.open(src, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        src_fd = open_local_fd(src)
         with os.fdopen(src_fd, "rb") as original:
             info = os.fstat(original.fileno())
             if not stat.S_ISREG(info.st_mode) or not 0 < info.st_size <= MAX_LOCAL_SOURCE:
                 raise UserError("请选择 1 GB 以内的普通媒体文件。")
             with destination.open("xb") as output:
-                os.fchmod(output.fileno(), 0o600)
+                if os.name != "nt":
+                    os.fchmod(output.fileno(), 0o600)
                 remaining = info.st_size
                 while remaining:
                     data = original.read(min(remaining, 1024 * 1024))
@@ -154,7 +158,7 @@ class Production:
             raise UserError("请选择可用的创作功能和运行环境。")
         if kind == "mux":
             if mode != "mac":
-                raise UserError("音画合成在此 Mac 上执行。")
+                raise UserError("音画合成在本机执行。")
             return {"kind": kind, **self.mux_source(body, "video", {"video", "mux"}),
                     **self.mux_source(body, "audio", {"tts"})}
         text = body.get("text")
@@ -269,7 +273,7 @@ class Production:
         artifact = {"name": name, "size": target.stat().st_size, "sha256": digest, **media}
         if engine:
             artifact["engine"] = engine
-        self.update(job["id"], state="done", phase="作品已保存到这台 Mac", artifact=artifact)
+        self.update(job["id"], state="done", phase="作品已保存到本机", artifact=artifact)
 
     def _mac(self, job, incoming):
         spec = job["spec"]
@@ -281,7 +285,8 @@ class Production:
             audio = (self.artifact_path(spec["audio_job"])[1] if spec.get("audio_job")
                      else copy_local_media(spec["audio_path"], folder, "narration", {".wav", ".mp3", ".m4a", ".aif", ".aiff"}))
             subprocess.run([str(media_tool()), "mux", str(video), str(audio), str(incoming)],
-                           check=True, capture_output=True, timeout=240)
+                           check=True, capture_output=True, timeout=240,
+                           creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         finally:
             for source in (*folder.glob("picture.*"), *folder.glob("narration.*")):
                 source.unlink(missing_ok=True)

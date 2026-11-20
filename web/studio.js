@@ -43,7 +43,7 @@ function renderStudioJobs() {
   return problem + studio.jobs.map(job => {
     const [zh, en, kind] = jobStates[job.state] || ["状态待核对", "Check status", ""];
     const name = t(zh, en);
-    const target = job.mode === "mac" ? t("这台 Mac", "This Mac") : "Colab · " + job.instance_id;
+    const target = job.mode === "mac" ? t("本机", "This computer") : "Colab · " + job.instance_id;
     const info = job.artifact;
     const detail = info
       ? [info.engine, formatMoney(info.seconds) + t(" 秒", " s"), info.width ? info.width + "×" + info.height : info.sample_rate + " Hz",
@@ -80,7 +80,7 @@ function renderStudio(profile) {
   const modules = [
     ["tts", t("Breeze TTS 2 配音", "Breeze TTS 2 voiceover"), t("在 Colab GPU 上生成 WAV。", "Generate WAV audio on a Colab GPU."), t("新建配音", "New voiceover"), studioTarget(profile)],
     ["video", t("文生视频", "Text to video"), t("用场景描述生成 3 秒或 5 秒的 Wan2.2 短镜头。", "Create a 3- or 5-second Wan2.2 clip from a scene description."), t("新建视频", "New video"), studioTarget(profile)],
-    ["mux", t("音画合成", "Audio and video mix"), t("选择视频和一段配音，导出带声音的 MP4。", "Combine a video and a voiceover into an MP4."), t("新建合成", "New mix"), t("这台 Mac", "This Mac")],
+    ["mux", t("音画合成", "Audio and video mix"), t("选择视频和一段配音，导出带声音的 MP4。", "Combine a video and a voiceover into an MP4."), t("新建合成", "New mix"), t("本机", "This computer")],
   ];
   return '<div class="layout-stack studio-page"><div class="studio-modules">' +
     modules.map(([key, title, caption, cta, target]) =>
@@ -91,7 +91,7 @@ function renderStudio(profile) {
     ).join("") +
     '</div><section class="panel studio-ledger"><div class="panel-header"><h2>' +
     t("任务与作品", "Jobs and outputs") + '</h2><span class="panel-note">' +
-    t("这台 Mac", "This Mac") + (profile ? ' · ' + escapeHtml(profile.name) : '') +
+    t("本机", "This computer") + (profile ? ' · ' + escapeHtml(profile.name) : '') +
     '</span></div><div id="studio-jobs">' + renderStudioJobs() + '</div></section></div>';
 }
 

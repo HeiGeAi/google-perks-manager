@@ -1,6 +1,6 @@
 "use strict";
 
-const desktop = window.webkit?.messageHandlers;
+const desktop = window.webkit?.messageHandlers || window.googlePerksDesktop;
 const languageChoices = ["system", "zh-CN", "en"];
 const languagePreferenceKey = "google-perks-language";
 const projectRepository = "HeiGeAi/google-perks-manager";
@@ -29,6 +29,7 @@ let appInfo = {
   effectiveLanguage: languageFor(savedLanguage()),
   version: "",
   agentCommand: "",
+  agentShell: "",
   repository: projectRepository,
   hasContactQr: false,
 };

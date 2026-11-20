@@ -2,11 +2,13 @@
 
 function agentPrompt() {
   const command = appInfo.agentCommand
-    ? "'" + appInfo.agentCommand.replaceAll("'", "'\\''") + "' --agent"
+    ? appInfo.agentShell === "powershell"
+      ? "& '" + appInfo.agentCommand.replaceAll("'", "''") + "' --agent"
+      : "'" + appInfo.agentCommand.replaceAll("'", "'\\''") + "' --agent"
     : "python3 -m google_manager.agent";
   const guide = command + " guide --language " + appInfo.effectiveLanguage;
   return t(
-`请用谷歌羊毛管理器协助我查看和操作这台 Mac 上的 Google 权益、Colab 算力和创作任务。请先在本机终端执行以下命令，读取可用命令、参数和结果格式。
+`请用谷歌羊毛管理器协助我查看和操作本机的 Google 权益、Colab 算力和创作任务。请先在本机终端执行以下命令，读取可用命令、参数和结果格式。
 
 ${guide}
 
@@ -17,7 +19,7 @@ ${guide}
 如果账号尚未接入 Colab，请先说明官方 OAuth 或已有 Colab CLI 授权的本机接入方式。经我明确同意后再打开授权流程。凭证由本机工具读取，请把令牌、Cookie、客户端密钥和授权链接保留在本机。
 
 申请或释放实例、运行会消耗 CU 的创作任务前，请让我确认账号、实例、费用或文件风险。按指南指定目标实例提交配音或视频，核对任务进度，取回作品并给出实际保存路径。合成任务在本机执行。请用实际返回值报告结果，余额未知时标明待核对。`,
-`Use Google Perks Manager to help me review and manage Google perks, Colab compute, and production jobs on this Mac. First run the command below in a local terminal to read the current commands, arguments, and response format.
+`Use Google Perks Manager to help me review and manage Google perks, Colab compute, and production jobs on this computer. First run the command below in a local terminal to read the current commands, arguments, and response format.
 
 ${guide}
 
@@ -37,7 +39,7 @@ function renderAgent() {
       <div>
         <h2 id="agent-prompt-title">${t("接入提示词", "Connection prompt")}</h2>
         <p class="panel-note">${appInfo.agentCommand
-          ? t("把提示词发给能在这台 Mac 上运行命令的 Agent。", "Give this prompt to an agent that can run commands on this Mac.")
+          ? t("把提示词发给能在本机运行命令的 Agent。", "Give this prompt to an agent that can run commands on this computer.")
           : t("在源码目录使用提示词中的命令。", "Run the command in the prompt from the source checkout.")}</p>
       </div>
       ${button(t("复制提示词", "Copy prompt"), "agent-copy", "primary compact")}
@@ -62,7 +64,7 @@ async function copyAgentPrompt(control) {
   } catch {
     field.focus();
     field.select();
-    message.textContent = t("提示词已选中，按 ⌘C 复制。", "Prompt selected. Use your copy shortcut.");
+    message.textContent = t("提示词已选中，请使用复制快捷键。", "Prompt selected. Use your copy shortcut.");
   } finally {
     message.hidden = false;
     control.disabled = false;

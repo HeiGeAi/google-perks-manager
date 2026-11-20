@@ -21,6 +21,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 from . import __version__
 from .accounts import UserError, label, write_private_json
 from .agent_service import AGENT_HEADER, READ_COMMANDS, RUNTIME_FILE, execute, read_command, redact_email
+from .local_files import open_local_fd, owned
 from .manager import Manager
 from .production import ACTIVE
 
@@ -106,10 +107,10 @@ class LocalServer(ThreadingHTTPServer):
             return None
         path = folder / "wechat-contact.png"
         try:
-            fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            fd = open_local_fd(path)
             with os.fdopen(fd, "rb") as image:
                 info = os.fstat(image.fileno())
-                if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_size > MAX_CONTACT_QR:
+                if not stat.S_ISREG(info.st_mode) or not owned(path, info, private=False) or info.st_size > MAX_CONTACT_QR:
                     return None
                 data = image.read(MAX_CONTACT_QR + 1)
         except OSError:
@@ -348,7 +349,9 @@ class Handler(BaseHTTPRequestHandler):
             status = 500
             message = ("Could not save authorization locally. Return to the app and reconnect."
                        if english else "本机无法保存授权，请回到谷歌羊毛管理器重新连接。")
-        return_url = "googlemanager://return" if self.server.desktop else "/"
+        return_url = "/"
+        if self.server.desktop:
+            return_url = "googleperksmanager://return" if os.name == "nt" else "googlemanager://return"
         title = "Google authorization" if english else "Google 授权"
         back = "Return to Google Perks Manager" if english else "返回谷歌羊毛管理器"
         page = (
@@ -429,6 +432,9 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def default_data_dir():
+    if os.name == "nt":
+        local = Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData/Local")
+        return local / "HeiGeAi" / "GooglePerksManager"
     if sys.platform == "darwin":
         return Path.home() / "Library" / "Application Support" / "谷歌管理器"
     return Path.home() / ".local" / "share" / "google-manager"
@@ -436,8 +442,12 @@ def default_data_dir():
 
 def stop_with_desktop(server, parent_pid):
     # Finder can force-quit the window process. Release the account lock then, too.
-    while parent_pid > 1 and os.getppid() == parent_pid:
-        time.sleep(0.5)
+    if os.name == "nt":
+        # The host keeps the redirected pipe open for the lifetime of its window.
+        sys.stdin.read(1)
+    else:
+        while parent_pid > 1 and os.getppid() == parent_pid:
+            time.sleep(0.5)
     server.shutdown()
 
 
