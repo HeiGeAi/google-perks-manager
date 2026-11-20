@@ -1,0 +1,308 @@
+[
+  {
+    "id": "cloud-monthly-credit",
+    "title": "月度 Google Cloud 抵用金",
+    "provider": "Google Developer Program",
+    "summary": "通过 Google Developer Program 领取并应用到有权限的 Cloud Billing 结算账号。",
+    "eligibility": "由有资格的付费订阅账号领取，额度自首次激活开发者权益起按月发放。",
+    "action_label": "去 Google 领取",
+    "claim_url": "https://me.developers.google.com/benefits",
+    "verification_url": "https://console.cloud.google.com/billing",
+    "source_url": "https://developers.google.com/profile/help/benefits?hl=en",
+    "checked_on": "2026-11-20",
+    "steps": [
+      "用当前选中的订阅账号进入权益页，打开 Google Cloud credits 卡片。",
+      "选择要接收抵用金的结算账号，核对账号名称，再点 Apply。",
+      "希望后续月份自动应用时，可在 Google 勾选 Always use this billing account。发放按首次激活日期的月度周年日计算。",
+      "在 Cloud Billing 选中同一结算账号，查看抵用金条目和到期日。"
+    ],
+    "comparison": "Google Cloud 抵用金",
+    "plan_unit": "美元/月",
+    "plan_values": {
+      "pro": "10",
+      "ultra-5x": "40",
+      "ultra-20x": "100"
+    }
+  },
+  {
+    "id": "cloud-free-trial",
+    "title": "Google Cloud 新客试用金",
+    "provider": "Google Cloud",
+    "summary": "符合新客资格可申请一次性 300 美元的试用金，有效期最长 90 天。",
+    "eligibility": "Google Cloud 单独审核新客资格及适用服务。",
+    "action_label": "去 Google 申请",
+    "claim_url": "https://console.cloud.google.com/freetrial",
+    "verification_url": "https://console.cloud.google.com/billing",
+    "source_url": "https://docs.cloud.google.com/free/docs/free-cloud-features",
+    "checked_on": "2026-11-20",
+    "steps": [
+      "在 Google 官方页查看试用资格和结算条件。",
+      "在 Cloud Billing 核对试用账号及抵用金的金额和到期时间。"
+    ],
+    "independent": true
+  },
+  {
+    "id": "colab-cu",
+    "title": "Colab 算力单位",
+    "provider": "Google Colab",
+    "summary": "按月提供 Colab 算力单位。Ultra 档提供更长的后台运行时间和更高级的 GPU 访问。",
+    "eligibility": "适用地区、年满 18 岁及方案管理员资格由 Google 核对。当前余额和费率可在 Colab 页刷新。",
+    "action_label": "打开 Colab",
+    "claim_url": "https://colab.research.google.com/",
+    "verification_url": "https://colab.research.google.com/",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-20",
+    "steps": [
+      "用订阅的 Google 账号打开 Colab，核对登录邮箱。",
+      "在谷歌管理器连接该账号并刷新，查看实时 CU、费率和正在运行的实例。"
+    ],
+    "comparison": "Colab 算力",
+    "plan_unit": "CU/月",
+    "plan_values": {
+      "pro": "200",
+      "ultra-5x": "1,000",
+      "ultra-20x": "2,000"
+    }
+  },
+  {
+    "id": "antigravity",
+    "title": "Antigravity",
+    "provider": "Google Antigravity",
+    "summary": "Antigravity 智能代理可用额度随档位增加。倍数适用于 Google 公布的 Gemini 基础用量。",
+    "eligibility": "模型耗用与刷新窗口按账号显示，第三方模型额度另按官方规则计算。",
+    "action_label": "打开 Antigravity",
+    "claim_url": "https://antigravity.google/",
+    "verification_url": "https://one.google.com/ai/credits",
+    "source_url": "https://antigravity.google/blog/changes-to-antigravity-plans",
+    "checked_on": "2026-11-20",
+    "steps": [
+      "使用对应订阅账号登录 Antigravity。",
+      "在工具中核对可用模型和配额。在 Google One 查看额外的 AI 积分记录。"
+    ],
+    "plan_values": {
+      "pro": "Pro 基础额度",
+      "ultra-5x": "5× Pro",
+      "ultra-20x": "20× Pro"
+    }
+  },
+  {
+    "id": "antigravity-carbon",
+    "title": "Antigravity 的 Gemini 4 Carbon",
+    "provider": "Google Antigravity",
+    "summary": "个人订阅方案中，Ultra 可以在 Antigravity 使用 Gemini 4 Carbon。",
+    "eligibility": "可用模型和基础用量按 Antigravity 当前账号显示。",
+    "action_label": "打开 Antigravity",
+    "claim_url": "https://antigravity.google/",
+    "source_url": "https://antigravity.google/pricing",
+    "checked_on": "2026-11-20",
+    "plan_values": {
+      "ultra-5x": "可使用",
+      "ultra-20x": "可使用"
+    }
+  },
+  {
+    "id": "flow",
+    "title": "Google Flow 视频积分",
+    "provider": "Google One",
+    "summary": "套餐每月额外发放的 Flow 专用积分，可用于生成图片和视频。",
+    "eligibility": "模型扣点和刷新时间以 Flow 页面为准。套餐月度积分随账单周期刷新。",
+    "action_label": "打开 Flow",
+    "claim_url": "https://labs.google/fx/tools/flow",
+    "verification_url": "https://one.google.com/ai/credits",
+    "source_url": "https://support.google.com/flow/answer/16526234?co=GENIE.Platform%3DDesktop&hl=en-0",
+    "checked_on": "2026-11-20",
+    "steps": [
+      "用当前账号进入 Flow，确认方案和剩余用量。",
+      "在 Google One 的 AI 积分页核对余额和用量记录。"
+    ],
+    "comparison": "Flow 视频积分",
+    "plan_unit": "点/月",
+    "plan_values": {
+      "pro": "1,000",
+      "ultra-5x": "10,000",
+      "ultra-20x": "25,000"
+    }
+  },
+  {
+    "id": "flow-low-priority",
+    "title": "Flow 低优先级生成",
+    "provider": "Google Flow",
+    "summary": "开通 Ultra 20x 后，部分模型和分辨率可用低优先级模式生成视频。",
+    "eligibility": "是否能以 0 点生成取决于所选模型、分辨率和账号资格，以 Flow 提交前的扣点提示为准。",
+    "action_label": "打开 Flow",
+    "claim_url": "https://labs.google/fx/tools/flow",
+    "source_url": "https://support.google.com/flow/answer/16526234?co=GENIE.Platform%3DDesktop&hl=en-0",
+    "checked_on": "2026-11-20",
+    "plan_values": {
+      "ultra-20x": "部分模式 0 点/次"
+    }
+  },
+  {
+    "id": "flow-music",
+    "title": "Flow Music",
+    "provider": "Google Flow Music",
+    "summary": "套餐提供独立的 Flow Music 音乐点数，可在 Flow Music 账号查看。",
+    "eligibility": "使用同一个合资格订阅账号授权，音乐点数在 Flow Music 单独结算。",
+    "action_label": "打开 Flow Music",
+    "claim_url": "https://www.flowmusic.app/",
+    "verification_url": "https://www.flowmusic.app/",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-20",
+    "steps": [
+      "在 Flow Music 选择通过 Google 继续，核对邮箱。",
+      "在 Google 授权页核对所请求的会员信息权限，完成后查看音乐点数。"
+    ],
+    "comparison": "Flow Music 音乐点数",
+    "plan_unit": "点/月",
+    "plan_values": {
+      "pro": "10,000",
+      "ultra-5x": "30,000",
+      "ultra-20x": "30,000"
+    }
+  },
+  {
+    "id": "storage",
+    "title": "Google One 云存储",
+    "provider": "Google One",
+    "summary": "Drive、Gmail 和 Google Photos 使用同一份 Google One 存储。",
+    "eligibility": "Google AI Pro 的容量按具体子方案为 5 TB 或 10 TB，Google One 存储页显示实际总容量。",
+    "action_label": "查看存储",
+    "claim_url": "https://one.google.com/storage",
+    "verification_url": "https://one.google.com/storage",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-20",
+    "steps": [
+      "核对 Google One 右上角账号，再看总容量与已用容量。"
+    ],
+    "comparison": "Google One 云存储",
+    "plan_unit": "TB",
+    "plan_values": {
+      "pro": "5 或 10",
+      "ultra-5x": "20",
+      "ultra-20x": "30"
+    }
+  },
+  {
+    "id": "gemini",
+    "title": "Gemini",
+    "provider": "Google Gemini",
+    "summary": "相比 Google AI Pro，Ultra 提高 Gemini 用量，并提供更多模型权限。",
+    "eligibility": "相对用量以 Pro 为基准，模型、功能和地区的限制见当前账号。",
+    "action_label": "打开 Gemini",
+    "claim_url": "https://gemini.google.com/",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-20",
+    "steps": [
+      "切到对应账号，查看 Gemini 的模型与功能列表。"
+    ],
+    "plan_values": {
+      "pro": "Pro 基础额度",
+      "ultra-5x": "5× Pro",
+      "ultra-20x": "20× Pro"
+    }
+  },
+  {
+    "id": "notebook",
+    "title": "Gemini Notebook",
+    "provider": "Google",
+    "summary": "原 NotebookLM。订阅增加研究、聊天和生成内容的用量。",
+    "eligibility": "用量随输入和输出变化。在设置的使用情况里查看刷新时间与周限额。",
+    "action_label": "打开 Gemini Notebook",
+    "claim_url": "https://notebooklm.google.com/",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://support.google.com/gemininotebook/answer/17670842?hl=en",
+    "checked_on": "2026-11-20",
+    "steps": [
+      "在 Gemini Notebook 确认登录邮箱。",
+      "打开设置中的使用情况，核对实际分配和剩余额度。"
+    ],
+    "plan_values": {
+      "pro": "Pro 基础额度",
+      "ultra-5x": "5× Pro",
+      "ultra-20x": "20× Pro"
+    }
+  },
+  {
+    "id": "youtube",
+    "title": "YouTube 会员",
+    "provider": "Google One",
+    "summary": "符合资格的付费 Pro 随方案提供 Premium Lite，Ultra 随方案提供 Premium 家庭版。",
+    "eligibility": "地区、试用状态和已有订阅会影响资格。Pro 的 Lite 随合资格方案自动生效，由方案管理员使用。",
+    "action_label": "在 Google 查看权益",
+    "claim_url": "https://one.google.com/benefits",
+    "verification_url": "https://www.youtube.com/paid_memberships",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-20",
+    "steps": [
+      "在 Google One 福利页核对账号看到的 YouTube 档位和提示。",
+      "在 YouTube 的购买内容与会员资格页面确认已开通的档位。"
+    ],
+    "plan_values": {
+      "pro": "Premium Lite 个人版",
+      "ultra-5x": "Premium 家庭版",
+      "ultra-20x": "Premium 家庭版"
+    }
+  },
+  {
+    "id": "family",
+    "title": "家庭共享",
+    "provider": "Google One",
+    "summary": "在 Google One 启用共享后，管理家庭成员和可共享权益。",
+    "eligibility": "各产品共享范围由 Google 单独规定，Colab 和开发者抵用金请核对方案管理员资格。",
+    "action_label": "管理家庭共享",
+    "claim_url": "https://one.google.com/settings",
+    "verification_url": "https://families.google.com/",
+    "source_url": "https://support.google.com/googleone/answer/9004015?hl=en",
+    "checked_on": "2026-11-20",
+    "steps": [
+      "用家庭方案管理员账号打开 Google One 设置，查看家庭共享。",
+      "打开家庭组页面核对成员，再逐项查看权益卡的共享规则。"
+    ],
+    "plan_values": {
+      "pro": "最多共享给 5 人",
+      "ultra-5x": "最多共享给 5 人",
+      "ultra-20x": "最多共享给 5 人"
+    }
+  },
+  {
+    "id": "home",
+    "title": "Google Home Premium",
+    "provider": "Google One",
+    "summary": "合资格的 Pro 可激活家居标准版，Ultra 可激活高级版。",
+    "eligibility": "可用地区和兼容设备以 Google One 福利卡为准。",
+    "action_label": "去 Google 领取",
+    "claim_url": "https://one.google.com/benefits",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://support.google.com/googleone/answer/14674938?co=GENIE.Platform%3DDesktop&hl=en",
+    "checked_on": "2026-11-20",
+    "steps": [
+      "用订阅账号打开 Google One 福利页，查看 Google Home Premium 的激活入口及关联设备。"
+    ],
+    "plan_values": {
+      "pro": "Standard",
+      "ultra-5x": "Advanced",
+      "ultra-20x": "Advanced"
+    }
+  },
+  {
+    "id": "health",
+    "title": "Google Health Premium",
+    "provider": "Google One",
+    "summary": "符合资格的 Pro 和 Ultra 可激活 Google Health Premium。",
+    "eligibility": "账号、地区和 Pixel Watch 或 Fitbit 等设备要求以官方福利页为准。",
+    "action_label": "去 Google 领取",
+    "claim_url": "https://one.google.com/benefits",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://support.google.com/googleone/answer/14674938?co=GENIE.Platform%3DDesktop&hl=en",
+    "checked_on": "2026-11-20",
+    "steps": [
+      "在 Google One 福利页查看 Google Health Premium 卡，核对账号和设备后完成官方激活。"
+    ],
+    "plan_values": {
+      "pro": "健康高级会员",
+      "ultra-5x": "健康高级会员",
+      "ultra-20x": "健康高级会员"
+    }
+  }
+]

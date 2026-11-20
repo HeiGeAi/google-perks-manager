@@ -1,0 +1,160 @@
+{
+  "cloud-monthly-credit": {
+    "title": "Monthly Google Cloud credit",
+    "summary": "Redeem in the Google Developer Program and apply the credit to a Cloud Billing account you can manage.",
+    "eligibility": "Eligible paid subscribers receive credits monthly from the date they first activate developer benefits.",
+    "action_label": "Redeem on Google",
+    "comparison": "Google Cloud credit",
+    "plan_unit": "USD/mo",
+    "steps": [
+      "Open the benefits page with the selected subscription account and find the Google Cloud credits card.",
+      "Select the billing account, verify its name, and choose Apply.",
+      "To apply future credits automatically, choose Always use this billing account. Credits follow the monthly anniversary of the first activation.",
+      "In Cloud Billing, select that account and check the credit and expiration date."
+    ]
+  },
+  "cloud-free-trial": {
+    "title": "Google Cloud trial credit",
+    "summary": "Eligible new customers can apply for a one-time USD 300 credit, valid for up to 90 days.",
+    "eligibility": "Google Cloud verifies new-customer eligibility and which services are covered.",
+    "action_label": "Apply on Google",
+    "steps": [
+      "Review trial eligibility and billing terms on the official Google page.",
+      "In Cloud Billing, check the trial account, credit amount, and expiration date."
+    ]
+  },
+  "colab-cu": {
+    "title": "Colab compute units",
+    "summary": "Colab compute units are provided monthly. Ultra gives you longer background runtimes and access to more powerful GPUs.",
+    "eligibility": "Google verifies eligible regions, age of 18 or over, and plan manager status. Refresh Colab to see the current balance and rate.",
+    "action_label": "Open Colab",
+    "comparison": "Colab compute",
+    "plan_unit": "CU/mo",
+    "steps": [
+      "Open Colab with the subscription account and verify the email address.",
+      "Connect that account in Google Perks Manager and refresh to see the live CU balance, usage rate, and running instances."
+    ]
+  },
+  "antigravity": {
+    "title": "Antigravity",
+    "summary": "Antigravity agent limits increase with the plan tier. The multipliers apply to Google's published baseline Gemini allowance.",
+    "eligibility": "Antigravity shows model limits and refresh windows for the signed-in account. Third-party models have their own limits.",
+    "action_label": "Open Antigravity",
+    "plan_values": {"pro": "Pro baseline"},
+    "steps": [
+      "Sign in to Antigravity with the subscription account.",
+      "Check available models and limits in Antigravity, and any extra AI credits in Google One."
+    ]
+  },
+  "antigravity-carbon": {
+    "title": "Gemini 4 Carbon in Antigravity",
+    "summary": "Ultra personal plans include access to Gemini 4 Carbon in Antigravity.",
+    "eligibility": "Check available models and baseline usage in the signed-in Antigravity account.",
+    "action_label": "Open Antigravity",
+    "plan_values": {"ultra-5x": "Included", "ultra-20x": "Included"}
+  },
+  "flow": {
+    "title": "Google Flow video credits",
+    "summary": "The plan includes dedicated monthly Flow credits for generating images and video.",
+    "eligibility": "Check how many credits each model uses and when credits renew in Flow. Monthly plan credits reset each billing cycle.",
+    "action_label": "Open Flow",
+    "comparison": "Flow video credits",
+    "plan_unit": "credits/mo",
+    "steps": [
+      "Open Flow with the selected account and check the plan and remaining allowance.",
+      "Review the credit balance and activity on Google One's AI credits page."
+    ]
+  },
+  "flow-low-priority": {
+    "title": "Low-priority generation in Flow",
+    "summary": "Ultra 20x can generate video at low priority for selected models and resolutions.",
+    "eligibility": "Zero-credit generation depends on the model, resolution, and account eligibility. Check the credit cost in Flow before submitting.",
+    "action_label": "Open Flow",
+    "plan_values": {"ultra-20x": "0 credits on eligible modes"}
+  },
+  "flow-music": {
+    "title": "Flow Music",
+    "summary": "The plan includes dedicated credits you can check in your Flow Music account.",
+    "eligibility": "Authorize the eligible subscription account. Music credits are tracked separately in Flow Music.",
+    "action_label": "Open Flow Music",
+    "comparison": "Flow Music credits",
+    "plan_unit": "credits/mo",
+    "steps": [
+      "In Flow Music, choose Continue with Google and verify your email address.",
+      "Review the requested membership permissions on the Google consent page, then check your credits in Flow Music."
+    ]
+  },
+  "storage": {
+    "title": "Google One cloud storage",
+    "summary": "Drive, Gmail, and Google Photos share the storage included in Google One.",
+    "eligibility": "Google AI Pro includes 5 TB or 10 TB depending on the plan. Check your total on the Google One storage page.",
+    "action_label": "View storage",
+    "comparison": "Google One storage",
+    "plan_values": {"pro": "5 or 10"},
+    "steps": [
+      "Verify the account in Google One, then check its total and used storage."
+    ]
+  },
+  "gemini": {
+    "title": "Gemini",
+    "summary": "Ultra increases Gemini usage allowances and gives access to more models than Pro.",
+    "eligibility": "Usage multipliers use Pro as the baseline. Check the signed-in account for model, feature, and regional limits.",
+    "action_label": "Open Gemini",
+    "plan_values": {"pro": "Pro baseline"},
+    "steps": [
+      "Switch to the subscription account and check the models and features available in Gemini."
+    ]
+  },
+  "notebook": {
+    "title": "Gemini Notebook",
+    "summary": "Formerly NotebookLM. Subscriptions increase the limits for research, chat, and generating content.",
+    "eligibility": "Usage depends on inputs and outputs. See usage in Settings for the refresh time and weekly limits.",
+    "action_label": "Open Gemini Notebook",
+    "plan_values": {"pro": "Pro baseline"},
+    "steps": [
+      "Verify the email address signed in to Gemini Notebook.",
+      "Open usage settings to check your allowance and remaining quota."
+    ]
+  },
+  "youtube": {
+    "title": "YouTube membership",
+    "summary": "Eligible paid Pro plans include Premium Lite. Eligible Ultra plans include Premium Family.",
+    "eligibility": "Region, trial status, and an existing subscription affect eligibility. Premium Lite activates automatically for eligible Pro plan managers.",
+    "action_label": "View perk on Google",
+    "plan_values": {"pro": "Premium Lite individual", "ultra-5x": "Premium Family", "ultra-20x": "Premium Family"},
+    "steps": [
+      "On the Google One benefits page, check the YouTube plan and instructions shown for this account.",
+      "Confirm the active plan on YouTube's Purchases and memberships page."
+    ]
+  },
+  "family": {
+    "title": "Family sharing",
+    "summary": "Manage family members and available sharing options in Google One.",
+    "eligibility": "Sharing rules vary by product. Verify any plan manager requirements for Colab and Google Cloud credits.",
+    "action_label": "Manage family sharing",
+    "plan_values": {"pro": "Share with up to 5 people", "ultra-5x": "Share with up to 5 people", "ultra-20x": "Share with up to 5 people"},
+    "steps": [
+      "Open Google One settings with the plan manager account and view family sharing.",
+      "Check family group members and review the sharing rules on each benefits card."
+    ]
+  },
+  "home": {
+    "title": "Google Home Premium",
+    "summary": "Eligible Pro accounts can activate Standard, and eligible Ultra accounts can activate Advanced.",
+    "eligibility": "Check eligible regions and compatible devices on the Google One benefits card.",
+    "action_label": "Redeem on Google",
+    "steps": [
+      "Open Google One benefits with the subscription account to find Google Home Premium activation and linked devices."
+    ]
+  },
+  "health": {
+    "title": "Google Health Premium",
+    "summary": "Eligible Pro and Ultra accounts can activate Google Health Premium.",
+    "eligibility": "The official benefits page lists account, region, and device requirements, such as a Pixel Watch or Fitbit.",
+    "action_label": "Redeem on Google",
+    "plan_values": {"pro": "Premium membership", "ultra-5x": "Premium membership", "ultra-20x": "Premium membership"},
+    "steps": [
+      "Find Google Health Premium in Google One benefits and verify the account and device before completing activation."
+    ]
+  }
+}

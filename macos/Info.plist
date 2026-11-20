@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key><string>en</string>
+  <key>CFBundleDisplayName</key><string>谷歌羊毛管理器</string>
+  <key>CFBundleName</key><string>Google Perks Manager</string>
+  <key>CFBundleExecutable</key><string>GoogleManager</string>
+  <key>CFBundleIdentifier</key><string>com.heige.google-manager</string>
+  <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>0.7.0</string>
+  <key>CFBundleVersion</key><string>8</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
+  <key>CFBundleLocalizations</key><array><string>zh-Hans</string><string>en</string></array>
+  <key>CFBundleURLTypes</key>
+  <array><dict>
+    <key>CFBundleTypeRole</key><string>Viewer</string>
+    <key>CFBundleURLName</key><string>com.heige.google-manager.return</string>
+    <key>CFBundleURLSchemes</key><array><string>googlemanager</string></array>
+  </dict></array>
+  <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
+  <key>LSMinimumSystemVersion</key><string>14.0</string>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSAppTransportSecurity</key><dict>
+    <key>NSAllowsLocalNetworking</key><true/>
+  </dict>
+</dict>
+</plist>
