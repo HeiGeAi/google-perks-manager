@@ -17,7 +17,7 @@ const benefitLabels = {
   unverified: ["待核验", "Not verified"], available: ["可领取", "Available"], claimed: ["已领取", "Claimed"], not_eligible: ["暂不符合要求", "Not eligible"],
 };
 
-let data = { accounts: [], benefits: [], supportedGpus: [] };
+let data = { accounts: [], benefits: [], supportedGpus: [], highRam: [], h3Regions: [], projects: {} };
 let localStatus = "loading";
 let selected = localStorage.getItem("google-manager-account");
 let page = Object.hasOwn(pageLabels, location.hash.slice(1)) ? location.hash.slice(1) : "colab";
@@ -79,7 +79,10 @@ function applyState(state) {
   const next = {
     accounts: state.accounts,
     benefits: state.benefits,
-    supportedGpus: Array.isArray(state.supported_gpus) ? state.supported_gpus : [],
+    supportedGpus: state.supported_hardware || state.supported_gpus || [],
+    highRam: state.high_ram_hardware || [],
+    h3Regions: state.h3_regions || [],
+    projects: state.deployment_projects || {},
   };
   const changed = localStatus !== "ready" || JSON.stringify(data) !== JSON.stringify(next);
   data = next;
@@ -216,7 +219,10 @@ function instanceTable(profile, observation, instances) {
     const name = instance.name || instance.id;
     const id = instance.name && instance.id !== instance.name ? `<span class="instance-id secondary">${escapeHtml(instance.id)}</span>` : "";
     const stop = button(t("停止", "Stop"), "stop-instance", "danger compact", instance.id, !canStop || busy);
-    return `<tr><td><strong>${escapeHtml(name)}</strong>${id}</td><td>${escapeHtml(instance.gpu || t("类型待核验", "GPU unknown"))}</td><td>${escapeHtml(instance.region || t("地域待核验", "Region unknown"))}</td><td>${stop}</td></tr>`;
+    const inspect = button(t("查配置", "Check specs"), "inspect-instance", "text compact", instance.id, !canStop || busy);
+    const measured = instance.hardware ? `<span class="instance-id secondary">${escapeHtml(hardwareSummary(instance.hardware))}</span>` : "";
+    const shape = [1, "1", "hm"].includes(instance.machine_shape) ? `<span class="instance-id secondary">${t("高系统内存", "High system RAM")}</span>` : "";
+    return `<tr><td><strong>${escapeHtml(name)}</strong>${id}</td><td>${escapeHtml(instance.gpu || t("类型待核验", "GPU unknown"))}${shape}${measured}</td><td>${escapeHtml(instance.region || t("地域待核验", "Region unknown"))}</td><td><div class="actions">${inspect}${stop}</div></td></tr>`;
   });
   return `<section class="panel" aria-labelledby="instance-title"><div class="panel-header"><h2 id="instance-title">${t("实例", "Instances")}</h2>${canStop && rows.length && !current ? `<span class="panel-note">${t("释放前会重新核对实例 ID", "The instance ID is checked again before release")}</span>` : ""}</div>
     ${rows.length ? `<table class="table" aria-labelledby="instance-title"><thead><tr><th scope="col">${t("实例", "Instance")}</th><th scope="col">${t("算力", "GPU")}</th><th scope="col">${t("地域", "Region")}</th><th scope="col">${t("操作", "Actions")}</th></tr></thead><tbody>${rows.join("")}</tbody></table>` : `<p class="panel-empty">${current ? t("当前账号没有运行中的实例。", "This account has no running instances.") : hasObservation(observation) ? t("上次读回没有运行中的实例。", "No running instances in the last snapshot.") : t("等待账号连接并刷新实例。", "Connect an account and refresh instances.")}</p>`}
@@ -292,6 +298,10 @@ function render() {
   const profile = account();
   if (page === "benefits") pageContent.innerHTML = renderBenefits(profile);
   else if (page === "accounts") pageContent.innerHTML = renderAccounts();
+  else if (page === "apps") {
+    pageContent.innerHTML = renderDeployments(profile);
+    refreshStudio();
+  }
   else if (page === "studio") {
     pageContent.innerHTML = renderStudio(profile);
     refreshStudio();
@@ -493,6 +503,25 @@ function stopInstance(profile, instanceId) {
   }, "danger");
 }
 
+async function inspectInstance(profile, instanceId) {
+  busy = true;
+  announce(t("正在读取实例实际配置…", "Reading assigned hardware…"));
+  render();
+  try {
+    const result = await change(accountPath(profile, "/instances/inspect"), { instance_id: instanceId });
+    const row = result.instance;
+    setDialog(t("实例实测配置", "Measured hardware"), contextRows([
+      [t("实例", "Instance"), row.name], [t("机房", "Region"), row.region || t("待核验", "Unverified")],
+      [t("配置", "Hardware"), hardwareSummary(row.hardware)], [t("读回时间", "Measured at"), formatTime(row.hardware.checked_at)],
+    ]));
+    announce("");
+  } catch (error) { announce(error.message, true); }
+  finally {
+    busy = false;
+    render();
+  }
+}
+
 function recordBenefit(profile, id) {
   const benefit = data.benefits.find(item => item.id === id);
   if (!benefit) return;
@@ -549,6 +578,7 @@ document.addEventListener("click", event => {
     render();
   } else if (!busy && localStatus === "ready") {
     if (action.startsWith("studio-")) studioAction(action, id, account());
+    else if (action.startsWith("deploy-")) deploymentAction(action, id, account());
     else if (action === "add-account") addAccount();
     else if (action === "rename-account" && profile) renameAccount(profile);
     else if (action === "import-cli" && profile) importCli(profile);
@@ -558,6 +588,7 @@ document.addEventListener("click", event => {
     else if (action === "choose-oauth-client") chooseOAuthClient(control);
     else if (action === "refresh-account" && profile) refreshAccount(profile);
     else if (action === "start-instance" && profile) startInstance(profile);
+    else if (action === "inspect-instance" && account()) inspectInstance(account(), id);
     else if (action === "stop-instance" && account()) stopInstance(account(), id);
     else if (action === "filter-benefits" && page === "benefits") filterBenefits(id);
     else if (action === "record-benefit" && account()) recordBenefit(account(), id);

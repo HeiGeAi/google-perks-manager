@@ -94,6 +94,39 @@ class ProductionTests(unittest.TestCase):
         spec = self.production.spec({**body, "mode": "colab"})
         self.assertEqual(spec["engine"], "Breeze TTS 2")
 
+    def test_h3_deployment_requires_compatible_hardware_and_verified_region(self):
+        account_id = self.cloud_profile("A", "first@example.test")
+        observation = self.manager.store.one(account_id)["observation"]
+        allocation = observation["instances"][0]
+        body = {"id": "3" * 32, "kind": "deploy", "mode": "colab", "project": "h3",
+                "account_id": account_id, "instance_id": "machine", "legacy_nodes": True, "confirmed": True}
+        with patch.object(self.production, "_launch") as launch:
+            for gpu, region, error in (("G4", None, "机房"), ("G4", "us-east1", "机房"), ("CPU", "asia-southeast1", "算力")):
+                with self.subTest(gpu=gpu, region=region):
+                    allocation.update(gpu=gpu, region=region)
+                    self.manager.store.update(account_id, observation=observation)
+                    with self.assertRaisesRegex(UserError, error):
+                        self.production.start(body)
+            launch.assert_not_called()
+            allocation.update(gpu="G4", region="asia-southeast1")
+            self.manager.store.update(account_id, observation=observation)
+            self.production.start(body)
+            self.production.start(body)
+            launch.assert_called_once()
+        job = self.production.get(body["id"])
+        self.assertEqual(job["project"], "h3")
+        self.assertIs(job["spec"]["legacy_nodes"], True)
+
+    def test_h3_video_preserves_original_clip_and_aligned_longer_durations(self):
+        body = {"kind": "video", "mode": "colab", "text": "云层", "ratio": "portrait", "seed": 10}
+        for seconds, frames in ((5, 124), (10, 243), (15, 362)):
+            with self.subTest(seconds=seconds):
+                spec = self.production.spec({**body, "engine": "MiniMax H3", "seconds": seconds})
+                self.assertEqual((spec["engine"], spec["ratio"], spec["frames"]), ("MiniMax H3", "portrait", frames))
+        with self.assertRaisesRegex(UserError, "片长"):
+            self.production.spec({**body, "engine": "MiniMax H3", "seconds": 3})
+        self.assertEqual(self.production.spec(body)["frames"], 121)
+
     def local_colab_output(self, account):
         with patch.object(self.production, "_launch"):
             job = self.production.start(

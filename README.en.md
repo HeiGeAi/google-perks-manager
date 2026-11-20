@@ -50,9 +50,16 @@ The app follows the system language by default. Use **Settings → Language** to
 | View | What you can do |
 | --- | --- |
 | Accounts | Select Connect to Google to open Google’s consent page. Paste the code Google shows after approving the official Colab CLI connection. Under Other ways to connect, you can import an existing Colab CLI grant or use a desktop OAuth client for automatic callback. |
-| Colab | Check each account’s CU balance, usage rate and instances. Launch recommended hardware for video, voiceover or notebooks, or choose a model yourself. |
+| Colab | Check CU, usage rates and instances. Choose CPU, GPU, TPU and supported high-RAM profiles. Read the assigned VRAM, RAM and free disk after launch. |
+| Deploy apps | Prepare MiniMax H3, ComfyUI, Wan2.2, Breeze TTS 2 or Qwen3. Follow deployment progress per account. |
 | Perks | Compare Google AI Pro, Ultra 5x and Ultra 20x, check student and trial restrictions, and record results for each account. |
-| Studio | Run Breeze TTS 2 or Wan2.2 on a selected Colab GPU. Play, reveal, or remix outputs saved on this computer from any account. |
+| Studio | Generate video with sound using MiniMax H3 by default, or choose Wan2.2. Generate Breeze TTS 2 voiceovers and mix local outputs. |
+
+### Deploy MiniMax H3 and ComfyUI
+
+In **Colab → Start instance → MiniMax H3 video**, choose G4, H100, A100, L4 or T4. A full G4 has 96 GB of VRAM. Check the actual A100 VRAM and system RAM after allocation. The original workflow was verified on G4. L4 and T4 are preview options with a smaller frame size and sufficient system RAM. **Start & deploy** checks the assigned region and downloads and verifies about 42.47 GB of pinned weights. Verified weights on an already mounted old cache can be reused. [Official CLI hardware options](https://github.com/googlecolab/google-colab-cli/blob/main/docs/01_session_management.md) · [ComfyUI H3 guide](https://blog.comfy.org/p/minimax-h3-day-0-support-in-comfyui)
+
+Once the deployment is ready, open private ComfyUI or generate a short H3 video in Studio. Install the four legacy workflow nodes with H3 when needed, then import the original workflow in ComfyUI. Studio verifies and saves its outputs locally. Save work from ComfyUI before releasing the runtime. H3 open weights are subject to the community license. [H3 community license](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/LICENSE)
 
 Google determines actual benefit eligibility, Colab availability, and usage. The Breeze TTS 2 weights and self-hosted outputs carry research and non-commercial terms. [Google AI plans](https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en) · [Developer Program perks](https://developers.google.com/profile/help/benefits?hl=en) · [Colab FAQ](https://research.google.com/colaboratory/faq.html) · [Breeze TTS 2](https://huggingface.co/BreezeBlue/Breeze-TTS-2)
 

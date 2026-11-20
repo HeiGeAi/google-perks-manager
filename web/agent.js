@@ -18,7 +18,7 @@ ${guide}
 
 如果账号尚未接入 Colab，请先说明官方 OAuth 或已有 Colab CLI 授权的本机接入方式。经我明确同意后再打开授权流程。凭证由本机工具读取，请把令牌、Cookie、客户端密钥和授权链接保留在本机。
 
-申请或释放实例、运行会消耗 CU 的创作任务前，请让我确认账号、实例、费用或文件风险。按指南指定目标实例提交配音或视频，核对任务进度，取回作品并给出实际保存路径。合成任务在本机执行。请用实际返回值报告结果，余额未知时标明待核对。`,
+申请或释放实例、部署应用、运行会消耗 CU 的创作任务前，请让我确认账号、实例、费用或文件风险。按指南选择兼容实例部署 MiniMax H3 或其他项目。生成视频时优先指定 MiniMax H3。核对任务进度，取回作品并给出实际保存路径。合成任务在本机执行。请用实际返回值报告结果，余额未知时标明待核对。`,
 `Use Google Perks Manager to help me review and manage Google perks, Colab compute, and production jobs on this computer. First run the command below in a local terminal to read the current commands, arguments, and response format.
 
 ${guide}
@@ -29,7 +29,7 @@ For perks, use the membership tier I specify. Read the catalog and selected perk
 
 If Colab is disconnected, explain the official OAuth and existing local Colab CLI authorization options. Open the consent flow only after I confirm. Keep credentials local, including tokens, cookies, client secrets, and authorization URLs.
 
-Before starting or releasing an instance or running a CU-consuming job, ask me to confirm the account, instance, costs, or file risks. Use the guide to submit voiceover or video jobs to the selected instance, check progress, collect the result, and report its saved path. Audio and video mixing runs locally. Base your report on returned results and mark any unknown balance as unverified.`);
+Before starting or releasing an instance, deploying an app, or running a CU-consuming job, ask me to confirm the account, instance, costs, or file risks. Use the guide to select a compatible runtime and deploy MiniMax H3 or another project. Prefer MiniMax H3 for new video jobs. Check progress, collect the result, and report its saved path. Audio and video mixing runs locally. Base your report on returned results and mark any unknown balance as unverified.`);
 }
 
 function renderAgent() {

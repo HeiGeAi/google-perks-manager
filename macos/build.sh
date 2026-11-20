@@ -32,6 +32,8 @@ mkdir "$stage/web"
     --add-data "$repo/benefits.json:." --add-data "$stage/web:web" \
     --add-data "$repo/recipes/run_job.py:recipes" --add-data "$repo/recipes/wan22.json:recipes" \
     --add-data "$repo/recipes/breeze.json:recipes" \
+    --add-data "$repo/recipes/h3.json:recipes" --add-data "$repo/recipes/qwen06.json:recipes" \
+    --add-data "$repo/recipes/runtime_probe.py:recipes" \
     --exclude-module pyarrow --exclude-module IPython --exclude-module tkinter \
     macos/service_entry.py
 

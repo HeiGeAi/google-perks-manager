@@ -286,6 +286,8 @@ class Handler(BaseHTTPRequestHandler):
             return 200, {"drive": manager.drive.state(match[1])}
         if match := re.fullmatch(r"/api/production/jobs/([a-f0-9]{32})/refresh", path):
             return 202, {"job": manager.production.refresh(match[1])}
+        if match := re.fullmatch(r"/api/production/jobs/([a-f0-9]{32})/open", path):
+            return 200, {"port": manager.open_editor(match[1])}
         if path == "/api/accounts":
             account = manager.store.create(body.get("name"), body.get("email"))
             return 201, {"account_id": account["id"]}
@@ -314,6 +316,7 @@ class Handler(BaseHTTPRequestHandler):
         if action == "disconnect":
             with manager.store.account_lock(account_id):
                 manager.oauth.cancel(account_id)
+                manager.editor_tunnels.close_for(account_id)
                 manager.store.disconnect(account_id)
             return 200, {"message": "已移除这个账号在本机的授权。"}
         if action == "rename":
@@ -328,6 +331,9 @@ class Handler(BaseHTTPRequestHandler):
         if action == "instances/stop":
             operation = manager.stop(account_id, body)
             return 200, {"operation": operation, "message": operation["message"]}
+        if action == "instances/inspect":
+            instance = manager.inspect_instance(account_id, body.get("instance_id"))
+            return 200, {"instance": instance}
         if action and action.startswith("benefits/"):
             benefit_id = unquote(action.removeprefix("benefits/"))
             manager.update_benefit(account_id, benefit_id, body)

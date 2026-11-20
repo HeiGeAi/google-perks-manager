@@ -11,33 +11,12 @@ import os
 import re
 import sys
 import uuid
-from urllib.parse import urlsplit
-
-from .colab import GPUS, ProviderError
-from .remote_jobs import execute_job
+from .colab import HARDWARE, HIGH_RAM_CHOICES, TPUS, ProviderError, region_from_provider
+from .remote_jobs import execute_job, inspect_runtime, editor_connection
 
 
 def safe_instance_id(value):
     return isinstance(value, str) and re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_.-]{0,159}", value) is not None
-
-
-def region_from_provider(value):
-    try:
-        url = urlsplit(value)
-        host = url.hostname or ""
-        if (
-            url.scheme != "https" or url.username is not None or url.password is not None
-            or url.port not in {None, 443}
-            or not host.endswith((".prod.r.colab.dev", ".googleusercontent.com"))
-        ):
-            return None
-        prefix, separator, _ = host.partition(".prod.")
-        if not separator:
-            return None
-        match = re.fullmatch(r"([a-z]+(?:-[a-z]+)+[0-9]+)(?:-[a-z])?", prefix.rsplit(".", 1)[-1])
-        return match[1] if match else None
-    except (TypeError, ValueError):
-        return None
 
 
 def usage_amount(value):
@@ -59,6 +38,7 @@ def observe(client, request_error=ProviderError):
             "id": endpoint,
             "gpu": "CPU" if gpu == "NONE" else gpu,
             "region": region_from_provider(assignment.runtime_proxy_info.url),
+            "machine_shape": getattr(assignment, "machine_shape", None),
         })
     try:
         usage = client.get_consumption_user_info()
@@ -80,7 +60,7 @@ def observe(client, request_error=ProviderError):
 def execute(payload):
     try:
         import requests
-        from colab_cli.client import Accelerator, Client, ColabRequestError, GetAssignmentResponse, Prod, TooManyAssignmentsError, Variant
+        from colab_cli.client import Accelerator, Client, ColabRequestError, GetAssignmentResponse, Prod, Shape, TooManyAssignmentsError, Variant
     except ImportError:
         return {"error": "指定的 Python 无法导入 google-colab-cli。", "status": 503}
 
@@ -108,22 +88,28 @@ def execute(payload):
             client = Client(Prod(), session, logger=logger)
             if action in {"submit_job", "review_job"}:
                 return execute_job(action, client, RequestSession, payload)
+            if action == "inspect":
+                return inspect_runtime(client, payload["instance_id"])
+            if action == "editor_connection":
+                return editor_connection(client, payload["instance_id"], payload["project"])
             if action == "observe":
                 return observe(client, ColabRequestError)
             if action in {"start", "inspect_start"}:
                 gpu = payload["gpu"]
-                if gpu not in GPUS:
+                high_mem = payload.get("high_mem", False)
+                if gpu not in HARDWARE or type(high_mem) is not bool or (high_mem and gpu not in HIGH_RAM_CHOICES):
                     raise ProviderError("请选择支持的 Colab 硬件。", 400)
                 nonce = uuid.UUID(payload["nonce"])
-                variant = Variant.DEFAULT if gpu == "CPU" else Variant.GPU
+                variant = {"CPU": Variant.DEFAULT, **dict.fromkeys(TPUS, Variant.TPU)}.get(gpu, Variant.GPU)
                 accelerator = Accelerator.NONE if gpu == "CPU" else Accelerator(gpu)
+                shape = Shape.HIGH_RAM if high_mem else None
                 if action == "inspect_start":
                     # Reconcile the original nonce, as the installed CLI does before retrying.
-                    assignment = client._get_assignment(nonce, variant, accelerator)
+                    assignment = client._get_assignment(nonce, variant, accelerator, shape=shape)
                     if isinstance(assignment, GetAssignmentResponse):
                         return {"instance_id": None}
                 else:
-                    assignment = client.assign(nonce, variant=variant, accelerator=accelerator)
+                    assignment = client.assign(nonce, variant=variant, accelerator=accelerator, shape=shape)
                 if not safe_instance_id(assignment.endpoint):
                     raise ProviderError("启动响应缺少实例标识，请刷新实例列表。", uncertain=True)
                 return {"instance_id": assignment.endpoint}

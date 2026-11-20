@@ -54,9 +54,16 @@ open "/Applications/谷歌羊毛管理器.app"
 | 页面 | 操作 |
 | --- | --- |
 | 账号管理 | 点击“连接 Google”打开官方授权页。完成 Colab CLI 授权后，把 Google 显示的授权码粘回 App。“其他连接方式”支持导入已有的 Colab CLI 授权，或使用可自动接收授权结果的桌面 OAuth 配置。 |
-| Colab | 按账号查看 CU 余额、费率和实例。按短视频、配音或数据处理用途启动推荐机型，也可自选算力。 |
+| Colab | 查看 CU、费率和实例。可选 CPU、GPU、TPU 和受支持机型的高系统内存，分配后可查看实测显存、内存与磁盘。 |
+| 应用部署 | 一键准备 MiniMax H3、ComfyUI、Wan2.2、Breeze TTS 2 或 Qwen3。实例与部署进度按账号管理。 |
 | 权益 | 对照 Google AI Pro、Ultra 5x 和 Ultra 20x 额度，查看学生版及试用限制。打开官方权益或领取入口，核对后记录当前账号的结果。 |
-| 创作 | 在当前账号的 Colab GPU 调用 Breeze TTS 2 和 Wan2.2。保存到本机的作品可跨账号播放、打开文件夹或用于音画合成。 |
+| 创作 | 默认使用 MiniMax H3 生成带音轨的视频。Wan2.2 可单独选用。支持 Breeze TTS 2 配音和本机音画合成。 |
+
+### 部署 MiniMax H3 和 ComfyUI
+
+在 **Colab → 启动实例 → MiniMax H3 视频** 选择 G4、H100、A100、L4 或 T4。G4 整卡为 96 GB 显存。A100 显存与系统内存以实例实测为准。G4 是原工作流的验收机型，L4 与 T4 是低显存试跑选项，需要实例提供足够的系统内存。选择 **启动并部署** 后，App 会核对实际型号与机房，再下载并校验约 42.47 GB 的固定版本权重。已挂载的旧缓存会先校验再复用。 [官方 CLI 硬件选项](https://github.com/googlecolab/google-colab-cli/blob/main/docs/01_session_management.md) · [ComfyUI H3 说明](https://blog.comfy.org/p/minimax-h3-day-0-support-in-comfyui)
+
+部署记录显示就绪后，可以在 **创作** 提交 H3 短片，也可以打开私有 ComfyUI，使用首帧或首尾帧生成视频。旧工作流的四个节点可随 H3 安装，在 ComfyUI 导入对应工作流。旧项目使用的额外 LoRA 或放大权重需要按原工作流准备。App 会校验并取回在创作页提交的作品。直接在 ComfyUI 生成的作品请在释放实例前下载。H3 开放权重受社区许可证限制，可在项目卡查看。 [H3 社区许可证](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/LICENSE)
 
 权益的实际资格与到账以 Google 账号显示为准。Breeze TTS 2 自托管权重及产物适用其研究与非商用许可。Colab 的资格、可用实例和费率由 Google 提供。[Google AI 套餐](https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en) · [Google Developer Program 权益](https://developers.google.com/profile/help/benefits?hl=en) · [Colab FAQ](https://research.google.com/colaboratory/faq.html) · [Breeze TTS 2](https://huggingface.co/BreezeBlue/Breeze-TTS-2)
 

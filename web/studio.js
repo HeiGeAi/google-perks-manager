@@ -15,7 +15,7 @@ function studioUrl(id = "", suffix = "") {
 }
 
 async function refreshStudio() {
-  if (page !== "studio" || localStatus !== "ready") return;
+  if (!["studio", "apps"].includes(page) || localStatus !== "ready") return;
   const current = account()?.id || "";
   const request = ++studioRequest;
   try {
@@ -30,6 +30,8 @@ async function refreshStudio() {
   }
   const list = document.querySelector("#studio-jobs");
   if (list) list.innerHTML = renderStudioJobs();
+  const deployments = document.querySelector("#deployment-jobs");
+  if (deployments) deployments.innerHTML = studio.error ? `<p class="panel-empty inline-error">${escapeHtml(studio.error)}</p>` : renderDeploymentJobs();
 }
 
 function activeStudioJobs() {
@@ -39,8 +41,9 @@ function activeStudioJobs() {
 function renderStudioJobs() {
   if (studio.account !== (account()?.id || "")) return `<p class="job-empty" role="status">${t("正在读取本机任务…", "Loading local jobs…")}</p>`;
   const problem = studio.error ? '<p class="job-empty inline-error" role="alert">' + escapeHtml(studio.error) + '</p>' : "";
-  if (!studio.jobs.length) return problem || `<p class="job-empty">${t("提交创作后，进度与作品会出现在这里。", "Production jobs and their outputs will appear here.")}</p>`;
-  return problem + studio.jobs.map(job => {
+  const jobs = studio.jobs.filter(job => job.kind !== "deploy");
+  if (!jobs.length) return problem || `<p class="job-empty">${t("提交创作后，进度与作品会出现在这里。", "Production jobs and their outputs will appear here.")}</p>`;
+  return problem + jobs.map(job => {
     const [zh, en, kind] = jobStates[job.state] || ["状态待核对", "Check status", ""];
     const name = t(zh, en);
     const target = job.mode === "mac" ? t("本机", "This computer") : job.state === "done"
@@ -70,14 +73,15 @@ function renderStudioJobs() {
   }).join("");
 }
 
-function availableInstances(profile) {
+function availableInstances(profile, engine) {
+  if (engine === "MiniMax H3") return projectInstances(profile, "h3");
   if (profile?.auth_status !== "connected") return [];
   const items = profile.observation?.instances || [];
   return items.filter(i => creationGPUs.has(i.gpu));
 }
 
-function studioTarget(profile) {
-  const instances = availableInstances(profile);
+function studioTarget(profile, engine) {
+  const instances = availableInstances(profile, engine);
   if (instances.length) return escapeHtml(profile.name) + ' <span class="studio-target-count">' + t(instances.length + " 台可选", instances.length + " available") + '</span>';
   if (profile?.auth_status === "connected") return t("新建时可直接启动 Colab 实例", "Start a Colab instance when you begin");
   return t("连接 Google 后选择实例", "Connect Google to select an instance");
@@ -86,8 +90,8 @@ function studioTarget(profile) {
 function renderStudio(profile) {
   pageTitle();
   const modules = [
+    ["video", t("MiniMax H3 视频", "MiniMax H3 video"), t("生成带立体声的视频，或在 ComfyUI 继续图生视频与接续工作流。", "Generate video with stereo audio or continue image-to-video and multi-shot workflows in ComfyUI."), t("新建 H3 视频", "New H3 video"), studioTarget(profile, "MiniMax H3")],
     ["tts", t("Breeze TTS 2 配音", "Breeze TTS 2 voiceover"), t("在 Colab GPU 上生成 WAV。", "Generate WAV audio on a Colab GPU."), t("新建配音", "New voiceover"), studioTarget(profile)],
-    ["video", t("文生视频", "Text to video"), t("用场景描述生成 3 秒或 5 秒的 Wan2.2 短镜头。", "Create a 3- or 5-second Wan2.2 clip from a scene description."), t("新建视频", "New video"), studioTarget(profile)],
     ["mux", t("音画合成", "Audio and video mix"), t("选择视频和一段配音，导出带声音的 MP4。", "Combine a video and a voiceover into an MP4."), t("新建合成", "New mix"), t("本机", "This computer")],
   ];
   return '<div class="layout-stack studio-page"><div class="studio-modules">' +
@@ -95,7 +99,8 @@ function renderStudio(profile) {
       '<section class="panel studio-module studio-' + key + '"><div class="studio-module-title">' +
       '<i class="studio-icon studio-icon-' + key + '" aria-hidden="true"></i><h2>' + title + '</h2></div>' +
       '<p>' + caption + '</p><small>' + target + '</small><div class="actions">' +
-      button(cta, "studio-launch", key === "tts" ? "primary compact" : "compact", key, busy) + '</div></section>'
+      button(cta, "studio-launch", key === "video" ? "primary compact" : "compact", key, busy) +
+      (key === "video" ? button(t("Wan2.2 备选", "Wan2.2 alternative"), "studio-wan", "text compact", "", busy) : "") + '</div></section>'
     ).join("") +
     '</div><section class="panel studio-ledger"><div class="panel-header"><h2>' +
     t("任务与作品", "Jobs and outputs") + '</h2><span class="panel-note">' +
@@ -103,8 +108,8 @@ function renderStudio(profile) {
     '</span></div><div id="studio-jobs">' + renderStudioJobs() + '</div></section></div>';
 }
 
-function studioContext(profile, kind, preferredInstance) {
-  const items = availableInstances(profile);
+function studioContext(profile, kind, preferredInstance, engine) {
+  const items = availableInstances(profile, engine);
   const options = items.map(item => '<option value="' + escapeHtml(item.id) + '"' + (item.id === preferredInstance ? ' selected' : '') + '>' +
     escapeHtml([item.name || item.id, item.gpu, item.region].filter(Boolean).join(" · ")) + '</option>').join("");
   if (!options) {
@@ -112,7 +117,8 @@ function studioContext(profile, kind, preferredInstance) {
   }
   return contextRows([[t("账号", "Account"), profile.name]]) +
     '<label class="field">' + t("Colab 实例", "Colab instance") + '<select name="instance_id">'  + options + '</select></label>' +
-    (kind === "video" ? `<p class="panel-note">${t("首次在此实例生成需下载约 18.15 GB 模型文件。", "The first run on this instance downloads about 18.15 GB of model files.")}</p>` :
+    (engine === "MiniMax H3" ? `<p class="panel-note">${t("首次约 42.47 GB 权重，已校验的缓存会复用。低显存实例使用小画幅、约 5 秒试跑。", "The first run needs about 42.47 GB of weights. Verified caches are reused. Low-memory instances use a smaller frame size and a roughly 5-second preview.")}</p>`
+      : kind === "video" ? `<p class="panel-note">${t("首次在此实例生成需下载约 18.15 GB 模型文件。", "The first run on this instance downloads about 18.15 GB of model files.")}</p>` :
       `<p class="panel-note">${t("首次准备约 7.68 GB 模型文件。Breeze TTS 2 自托管适用于研究和非商用。", "The first run downloads about 7.68 GB of model files. Self-hosted Breeze TTS 2 is licensed for research and non-commercial use.")}</p>`) +
     `<label class="confirmation"><input type="checkbox" name="cloud_confirm"><span>${t("确认在此实例运行，按 Google 实际费率消耗 CU。", "I confirm this instance and accept CU charges at Google’s current rate.")}</span></label>`;
 }
@@ -146,10 +152,11 @@ function syncStudioDialog(form) {
   }
 }
 
-function openStudio(kind, profile, preferredInstance) {
+function openStudio(kind, profile, preferredInstance, engine = kind === "video" ? "MiniMax H3" : "") {
   if (!Object.hasOwn(productionKinds, kind)) return;
-  if (kind !== "mux" && !availableInstances(profile).length) {
-    if (profile && startInstance(profile, kind)) return;
+  if (kind !== "mux" && !availableInstances(profile, engine).length) {
+    if (profile && startInstance(profile, kind === "video" ? (engine === "MiniMax H3" ? "h3" : "wan") : "tts")) return;
+    if (kind === "video" && engine === "MiniMax H3") return openDeployment("h3", profile);
     const engine = kind === "tts" ? "Breeze TTS 2" : "Wan2.2";
     setDialog(t("选择 Colab GPU", "Choose a Colab GPU"), `<p>${engine} ${t("需要 L4、G4、A100 或 H100 实例。", "requires an L4, G4, A100, or H100 instance.")}</p>
       <div class="actions"><a class="button primary" href="#colab" data-action="studio-colab">${t("管理 Colab 实例", "Manage Colab instances")}</a></div>`);
@@ -162,14 +169,15 @@ function openStudio(kind, profile, preferredInstance) {
     fields = '<input type="hidden" name="mode" value="colab">' +
       `<label class="field">${t("配音文稿", "Voiceover script")}<textarea name="text" maxlength="600" rows="4" required></textarea></label>` +
       `<label class="field">${t("音色和语气（选填）", "Voice and tone (optional)")}<textarea name="instruction" maxlength="400" rows="2"></textarea></label>` +
-      '<div data-cloud-fields>' + studioContext(profile, kind, preferredInstance) + '</div>';
+      '<div data-cloud-fields>' + studioContext(profile, kind, preferredInstance, engine) + '</div>';
   } else if (kind === "video") {
+    const seconds = engine === "MiniMax H3" ? [5, 10, 15] : [5, 3];
     fields = '<input type="hidden" name="mode" value="colab">' +
       `<label class="field">${t("画面描述", "Scene description")}<textarea name="text" maxlength="1800" rows="4" required></textarea></label>` +
       `<div class="studio-form-grid"><label class="field">${t("画幅", "Aspect ratio")}<select name="ratio"><option value="landscape">${t("横屏", "Landscape")}</option>
       <option value="portrait">${t("竖屏", "Portrait")}</option></select></label><label class="field">${t("时长", "Duration")}<select name="seconds">
-      <option value="5">${t("约 5 秒", "About 5 seconds")}</option><option value="3">${t("约 3 秒", "About 3 seconds")}</option></select></label></div>` +
-      '<div data-cloud-fields>' + studioContext(profile, kind, preferredInstance) + '</div>';
+      ${seconds.map(value => `<option value="${value}">${t(`约 ${value} 秒`, `About ${value} seconds`)}</option>`).join("")}</select></label></div>` +
+      '<div data-cloud-fields>' + studioContext(profile, kind, preferredInstance, engine) + '</div>';
   } else {
     fields = '<input type="hidden" name="mode" value="mac">' + studioFileInput("video") + studioFileInput("audio") +
       `<p class="panel-note">${t("画面按配音时长循环或裁短，成片保存为 MP4。", "The video loops or trims to the length of the voiceover and saves as MP4.")}</p>`;
@@ -177,7 +185,7 @@ function openStudio(kind, profile, preferredInstance) {
   const seed = crypto.getRandomValues(new Uint32Array(1))[0];
   const dialogLabels = {
     tts: [t("新建配音", "New voiceover"), t("开始配音", "Generate voiceover")],
-    video: [t("新建视频", "New video"), t("开始生成", "Generate video")],
+    video: [t(`新建 ${engine} 视频`, `New ${engine} video`), t("开始生成", "Generate video")],
     mux: [t("新建音画合成", "New audio and video mix"), t("开始合成", "Mix audio and video")],
   };
   setDialog(dialogLabels[kind][0], title + fields, dialogLabels[kind][1], async form => {
@@ -191,7 +199,7 @@ function openStudio(kind, profile, preferredInstance) {
     } else {
       body.text = form.get("text");
       if (kind === "tts") body.instruction = form.get("instruction");
-      if (kind === "video") Object.assign(body, { ratio: form.get("ratio"), seconds: Number(form.get("seconds")), seed });
+      if (kind === "video") Object.assign(body, { engine, ratio: form.get("ratio"), seconds: Number(form.get("seconds")), seed });
     }
     if (mode === "colab") Object.assign(body, {
       account_id: profile?.id, instance_id: form.get("instance_id"), confirmed: form.get("cloud_confirm") === "on",
@@ -235,6 +243,7 @@ function previewStudio(id) {
 async function studioAction(action, id, profile) {
   try {
     if (action === "studio-launch") openStudio(id, profile);
+    else if (action === "studio-wan") openStudio("video", profile, undefined, "Wan2.2");
     else if (action === "studio-preview") previewStudio(id);
     else if (action === "studio-pick-file") await pickStudioFile(id);
     else if (action === "studio-archive") await openStudioArchive(id, profile);

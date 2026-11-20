@@ -50,7 +50,7 @@ internal sealed class DesktopWindow : Form
     [
         "getAppInfo", "setLanguage", "getAccountSelection", "setAccountSelection", "chooseOAuthClient",
         "chooseCliToken", "openGoogleAuthorization", "pickMediaFile", "pickDriveFolder", "revealProductionFile",
-        "copyCommunityRemark", "copyAgentPrompt", "checkForUpdate", "downloadUpdate", "installUpdate",
+        "copyCommunityRemark", "copyAgentPrompt", "checkForUpdate", "downloadUpdate", "installUpdate", "openPrivateEditor",
     ];
 
     private readonly string dataPath;
@@ -337,6 +337,9 @@ internal sealed class DesktopWindow : Form
                 if (google?.Host != "accounts.google.com" || !google.IsDefaultPort || google.Fragment.Length != 0
                     || google.AbsolutePath is not ("/o/oauth2/auth" or "/o/oauth2/v2/auth")) break;
                 return OpenExternal(google);
+            case "openPrivateEditor":
+                if (view.Source?.Fragment != "#apps" || !body.TryGetInt32(out var editorPort) || editorPort is < 1024 or > 65535) break;
+                return OpenExternal(new Uri($"http://127.0.0.1:{editorPort}/"));
             case "chooseOAuthClient":
             case "chooseCliToken":
                 if (body.ValueKind != JsonValueKind.Null) break;

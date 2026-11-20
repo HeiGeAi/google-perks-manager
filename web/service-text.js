@@ -176,6 +176,20 @@ const serviceTextEnglish = {
   "这个实例已有生成任务。等当前任务完成后再试。": "This instance already has a running generation job. Wait for it to finish.",
   "云端文件已生成，等待下载": "Remote output is ready to download",
   "任务在实例上失败。请核对可用空间、SDK 与网络。": "The job failed on the instance. Check disk space, the SDK, and network connectivity.",
+  "部署完成，可以开始创作": "Deployment ready",
+  "核对 ComfyUI 环境": "Checking the ComfyUI environment",
+  "启动私有 ComfyUI 工作台": "Starting the private ComfyUI workspace",
+  "启动 Qwen3 对话服务": "Starting Qwen3 chat",
+  "安装旧工作流的四个自定义节点": "Installing four legacy workflow nodes",
+  "MiniMax H3 正在生成视频和声音": "MiniMax H3 is generating video and audio",
+  "实际分配的算力与所选项目不兼容。": "The assigned hardware is incompatible with this project.",
+  "H3 无法在这个机房运行，或机房尚未核验。请查看 MiniMax H3 社区许可证。": "The region is unverified or excluded by the MiniMax H3 community license.",
+  "这台低显存实例的系统内存不足 30 GiB。请选择高内存或更高显存的实例。": "This smaller GPU needs at least 30 GiB of system RAM. Choose high RAM or a larger GPU.",
+  "这台低显存实例只开放约 5 秒的 H3 试跑。更长镜头请选择高显存实例。": "This smaller GPU supports about five seconds in the H3 preview profile. Choose a larger GPU for longer shots.",
+  "这个项目从创作页使用。": "Open this project from Studio.",
+  "暂时无法读取实例显存、系统内存和磁盘。请稍后再试。": "Could not read the instance’s VRAM, system RAM, and disk. Try again.",
+  "无法建立 Colab 私有应用通道。请核对实例仍在线，或关闭占用它的 SSH 连接后重试。": "Could not open the private Colab connection. Check the instance or disconnect an existing SSH session and try again.",
+  "实例上的应用暂时无法打开。请重新部署后再试。": "The app cannot be opened on this instance. Redeploy and try again.",
 };
 
 function serviceText(value, fallback = "The local service could not complete the request. Please try again.") {
@@ -192,8 +206,8 @@ function serviceText(value, fallback = "The local service could not complete the
     const label = targets[field[1] || field[2]];
     if (label) return field[3] ? "Enter 1 to " + field[3] + " characters for the " + label + "." : "Enter the " + label + ".";
   }
-  const download = text.match(/^下载并核对视频模型 (\d+)\/3$/);
-  if (download) return "Downloading and verifying video model " + download[1] + "/3";
+  const download = text.match(/^下载并(?:核对视频模型|校验模型) (\d+\/\d+)$/);
+  if (download) return "Downloading and verifying model " + download[1];
   const unverified = " 算力费率待核对。";
   if (text.endsWith(unverified)) {
     const prefix = text.slice(0, -unverified.length);

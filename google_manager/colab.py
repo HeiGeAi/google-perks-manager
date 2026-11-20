@@ -3,16 +3,21 @@
 import importlib.util
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from .accounts import UserError
 from .colab_auth import ColabAuthorization
 
 
 GPUS = ("CPU", "T4", "L4", "A100", "H100", "G4")
+TPUS = ("V5E1", "V6E1")
+HARDWARE = GPUS + TPUS
+HIGH_RAM_CHOICES = frozenset({"CPU", "T4", "A100", "H100", "G4"})
 REPO = Path(__file__).resolve().parent.parent
 
 
@@ -20,6 +25,20 @@ class ProviderError(UserError):
     def __init__(self, message, status=502, uncertain=False):
         super().__init__(message, status)
         self.uncertain = uncertain
+
+
+def region_from_provider(value):
+    try:
+        url = urlsplit(value)
+        host = url.hostname or ""
+        if (url.scheme != "https" or url.username is not None or url.password is not None
+                or url.port not in (None, 443) or not host.endswith((".prod.r.colab.dev", ".googleusercontent.com"))):
+            return None
+        prefix, separator, _ = host.partition(".prod.")
+        match = re.fullmatch(r"([a-z]+(?:-[a-z]+)+[0-9]+)(?:-[a-z])?", prefix.rsplit(".", 1)[-1])
+        return match[1] if separator and match else None
+    except (TypeError, ValueError):
+        return None
 
 
 class Colab:
@@ -75,14 +94,20 @@ class Colab:
     def authorize(self):
         return ColabAuthorization.start(self.command, REPO)
 
-    def start(self, token, gpu, nonce):
-        return self._request("start", token, gpu=gpu, nonce=nonce)["instance_id"]
+    def start(self, token, gpu, nonce, *, high_mem=False):
+        return self._request("start", token, gpu=gpu, nonce=nonce, high_mem=high_mem)["instance_id"]
 
-    def inspect_start(self, token, gpu, nonce):
-        return self._request("inspect_start", token, gpu=gpu, nonce=nonce)["instance_id"]
+    def inspect_start(self, token, gpu, nonce, *, high_mem=False):
+        return self._request("inspect_start", token, gpu=gpu, nonce=nonce, high_mem=high_mem)["instance_id"]
 
     def stop(self, token, instance_id):
         self._request("stop", token, instance_id=instance_id)
+
+    def inspect(self, token, instance_id):
+        return self._request("inspect", token, instance_id=instance_id)
+
+    def editor_connection(self, token, instance_id, project):
+        return self._request("editor_connection", token, instance_id=instance_id, project=project)
 
     def submit_job(self, token, instance_id, job_id, spec):
         return self._request("submit_job", token, instance_id=instance_id, job_id=job_id, spec=spec)

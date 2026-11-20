@@ -61,6 +61,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .nav-icon { display: inline-block; flex: none; width: 17px; height: 17px; position: relative; }
 .icon-colab { border: 1.5px solid currentColor; border-radius: 5px; height: 14px; }
 .icon-colab::before { content: ""; position: absolute; inset: 3px 2px auto; border-bottom: 1.5px solid currentColor; box-shadow: 0 4px currentColor; }
+.icon-apps::before { content: ""; position: absolute; width: 6px; height: 6px; top: 1px; left: 1px; border: 1.4px solid currentColor; border-radius: 1.5px; box-shadow: 8px 0 0 -1px currentColor, 0 8px 0 -1px currentColor, 8px 8px 0 -1px currentColor; }
 .icon-benefits { border: 1.5px solid currentColor; border-radius: 3px; height: 14px; }
 .icon-benefits::before, .icon-benefits::after { content: ""; position: absolute; background: currentColor; }
 .icon-benefits::before { left: 6px; top: -3px; bottom: 0; width: 1.5px; }
@@ -392,7 +393,7 @@ dialog:has(.launch-purpose) .dialog-context { grid-template-columns: auto minmax
   padding: clamp(16px, 2.15vw, 26px); display: flex; flex-direction: column; gap: 9px;
   background: var(--surface); min-width: 0;
 }
-.studio-tts {
+.studio-video {
   grid-row: span 2; justify-content: center;
   padding: clamp(22px, 4vw, 40px);
   border-color: #dcc6a3;
@@ -401,13 +402,13 @@ dialog:has(.launch-purpose) .dialog-context { grid-template-columns: auto minmax
 }
 .studio-module-title { display: flex; align-items: center; gap: 9px; }
 .studio-module h2 { line-height: 1.25; }
-.studio-module:not(.studio-tts) h2 { font-size: 17px; font-weight: 700; }
-.studio-tts .studio-module-title { flex-wrap: wrap; }
-.studio-tts .studio-icon { flex: 0 0 42px; width: 42px; height: 42px; border: 1px solid #ddc7a1; background: #fff8e8; }
-.studio-tts h2 { font-family: var(--display); font-size: clamp(25px, 2.8vw, 36px); font-weight: 600; }
+.studio-module:not(.studio-video) h2 { font-size: 17px; font-weight: 700; }
+.studio-video .studio-module-title { flex-wrap: wrap; }
+.studio-video .studio-icon { flex: 0 0 42px; width: 42px; height: 42px; border: 1px solid #ddc7a1; background: #fff8e8; }
+.studio-video h2 { font-family: var(--display); font-size: clamp(25px, 2.8vw, 36px); font-weight: 600; }
 .studio-module p { color: var(--muted); font-size: 13px; margin: 0 0 2px; line-height: 1.6; }
 .studio-module small { font-size: 12px; color: var(--deep); margin-top: auto; overflow-wrap: anywhere; }
-.studio-tts small { margin-top: 9px; }
+.studio-video small { margin-top: 9px; }
 .studio-module .actions { margin-top: 7px; }
 .studio-icon {
   width: 28px; height: 28px; flex: 0 0 28px; border-radius: 9px; background: var(--soft);
@@ -449,7 +450,7 @@ dialog:has(.launch-purpose) .dialog-context { grid-template-columns: auto minmax
 }
 @media (max-width: 720px) {
   .studio-modules { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .studio-tts { grid-row: auto; grid-column: 1 / -1; }
+  .studio-video { grid-row: auto; grid-column: 1 / -1; }
   .job-row { grid-template-columns: minmax(98px, 1fr) minmax(110px, 1fr); padding: 12px 14px; }
 }
 @media (max-width: 415px) {
@@ -537,6 +538,14 @@ dialog:has(.launch-purpose) .dialog-context { grid-template-columns: auto minmax
   height: auto; border: 1px solid var(--line); border-radius: var(--small-radius); background: #fff;
 }
 .qr-dialog .community-actions { justify-content: center; }
+
+.deployment-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr)); gap: 14px; }
+.deployment-card { display: grid; align-content: start; gap: 8px; padding: 19px; }
+.deployment-card.is-featured { background: linear-gradient(115deg, var(--surface) 28%, var(--soft)); border-color: var(--gold-line); }
+.deployment-card h2 { font-size: 17px; }
+.deployment-gpus { font-size: 12px; font-weight: 650; color: var(--deep); }
+.deployment-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 12px; align-items: center; padding: 16px 22px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+@media (max-width: 760px) { .deployment-row { grid-template-columns: minmax(0, 1fr); } }
 
 @media (max-width: 1010px) {
   .settings-grid, .preference-grid { grid-template-columns: minmax(0, 1fr); }

@@ -14,8 +14,9 @@ import wave
 from pathlib import Path
 
 from .accounts import UserError, label, private_directory, read_object, timestamp, write_private_json
+from .deployment import PROJECTS, project_for, require_supported_runtime
 from .local_files import open_local_fd
-from .remote_jobs import CREATION_GPUS, ID
+from .remote_jobs import ID
 
 ACTIVE = {"queued", "running", "remote", "check"}
 VIDEO_SIZES = {"landscape": (1280, 704), "portrait": (704, 1280)}
@@ -160,8 +161,15 @@ class Production:
 
     def spec(self, body):
         kind, mode = body.get("kind"), body.get("mode")
-        if not isinstance(kind, str) or kind not in MEDIA_NAMES or mode not in ("mac", "colab"):
+        if not isinstance(kind, str) or kind not in (*MEDIA_NAMES, "deploy") or mode not in ("mac", "colab"):
             raise UserError("请选择可用的创作功能和运行环境。")
+        if kind == "deploy":
+            project = body.get("project")
+            legacy = body.get("legacy_nodes", False)
+            if (mode != "colab" or not isinstance(project, str) or project not in PROJECTS
+                    or type(legacy) is not bool or (legacy and project != "h3")):
+                raise UserError("请选择可部署的项目。")
+            return {"kind": kind, "project": project, "legacy_nodes": legacy}
         if kind == "mux":
             if mode != "mac":
                 raise UserError("音画合成在本机执行。")
@@ -180,15 +188,24 @@ class Production:
             return {"kind": kind, "text": text.strip(), "instruction": instruction.strip(),
                     "engine": "Breeze TTS 2"}
         if mode != "colab":
-            raise UserError("Wan2.2 视频需要 Colab GPU 实例。")
+            raise UserError("视频生成需要 Colab GPU 实例。")
+        engine = body.get("engine", "Wan2.2")
+        if engine not in ("MiniMax H3", "Wan2.2"):
+            raise UserError("请选择支持的视频模型。")
         ratio = body.get("ratio", "landscape")
         length = body.get("seconds", 5)
-        if not isinstance(ratio, str) or ratio not in VIDEO_SIZES or type(length) is not int or length not in {3, 5}:
+        h3_frames = {5: 124, 10: 243, 15: 362}
+        durations = h3_frames if engine == "MiniMax H3" else {3, 5}
+        if not isinstance(ratio, str) or ratio not in VIDEO_SIZES or type(length) is not int or length not in durations:
             raise UserError("请选择视频比例和片长。")
         width, height = VIDEO_SIZES[ratio]
         seed = body.get("seed")
         if type(seed) is not int or not 0 <= seed <= 4294967295:
             raise UserError("随机种子必须是 0 至 4294967295 的整数。")
+        if engine == "MiniMax H3":
+            return {"kind": kind, "engine": engine, "text": text.strip(), "ratio": ratio,
+                    "frames": h3_frames[length], "seed": seed}
+        # Preserve the stored spec of existing Wan2.2 jobs and retries.
         return {"kind": kind, "text": text.strip(), "width": width, "height": height,
                 "frames": length * 24 + 1, "seed": seed}
 
@@ -197,7 +214,7 @@ class Production:
         if not isinstance(job_id, str) or not ID.fullmatch(job_id):
             raise UserError("无法建立任务，请重新打开表单。")
         spec = self.spec(body)
-        title = label(body.get("title"), "作品名称", 80)
+        title = PROJECTS[spec["project"]]["name"] if spec["kind"] == "deploy" else label(body.get("title"), "作品名称", 80)
         mode = body["mode"]
         if mode == "mac":
             return self._register(job_id, title, mode, spec)
@@ -214,8 +231,8 @@ class Production:
             match = next((i for i in profile["observation"]["instances"] if i["id"] == instance_id), None)
             if not match:
                 raise UserError("请刷新 Colab 实例并选择目标。", 409)
-            if match["gpu"] not in CREATION_GPUS:
-                raise UserError("请选择 L4、G4、A100 或 H100。", 409)
+            # Hardware and region are checked again from the private assignment before the worker writes anything.
+            require_supported_runtime(project_for(spec), match["gpu"], match.get("region"))
             return self._register(job_id, title, mode, spec, account_id, instance_id)
 
     def _register(self, job_id, title, mode, spec, account_id=None, instance_id=None):
@@ -233,6 +250,8 @@ class Production:
             row = {"id": job_id, "title": title, "kind": spec["kind"], "mode": mode,
                    "account_id": account_id, "instance_id": instance_id, "spec": spec,
                    "state": "queued", "phase": "准备任务", "created_at": stamp, "updated_at": stamp}
+            if spec["kind"] == "deploy":
+                row["project"] = spec["project"]
             write_private_json(folder / "job.json", row)
             self._launch(row, submit=True)
             return self.public(row)
@@ -322,11 +341,14 @@ class Production:
             result = colab.review_job(token, instance, job_id, job["kind"], incoming)
             state = result["state"]
             if state == "done":
+                if job["kind"] == "deploy":
+                    self.update(job_id, state="done", phase=result["phase"], hardware=result["hardware"])
+                    return
                 if incoming.stat().st_size != result["size"] or digest_file(incoming) != result["sha256"]:
                     raise UserError("下载后的媒体文件校验失败，请重新取回。", 502)
                 engine = result.get("engine")
                 if job["spec"].get("engine") and job["spec"]["engine"] != engine:
-                    raise UserError("云端结果的配音引擎与任务要求不一致。", 502)
+                    raise UserError("云端结果的引擎与任务要求不一致。", 502)
                 self._finish(job, incoming, engine=engine)
                 return
             if state == "failed":
@@ -347,7 +369,7 @@ class Production:
 
     def _work(self, job, submit):
         job_id = job["id"]
-        incoming = self.root / job_id / (".incoming-" + MEDIA_NAMES[job["kind"]])
+        incoming = self.root / job_id / (".incoming-" + MEDIA_NAMES.get(job["kind"], "deployment"))
         try:
             if job["mode"] == "mac":
                 self._mac(job, incoming)
@@ -376,7 +398,7 @@ class Production:
         return row, self.saved_file(row)
 
     def saved_file(self, row):
-        if row["state"] != "done":
+        if row["state"] != "done" or row["kind"] not in MEDIA_NAMES:
             raise UserError("作品尚未保存。", 404)
         folder = self.root / row["id"]
         path = folder / MEDIA_NAMES[row["kind"]]

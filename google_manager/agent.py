@@ -17,7 +17,8 @@ from . import __version__
 from .accounts import UserError, read_private_json
 from .local_files import ensure_process_running
 from .agent_service import AGENT_HEADER, CONFIRM_COMMANDS, PLAN_TIERS, RUNTIME_FILE
-from .colab import GPUS
+from .colab import HARDWARE
+from .deployment import PROJECTS
 
 
 MAX_RESPONSE = 8 * 1024 * 1024
@@ -39,6 +40,8 @@ def guide(language):
             if english else "使用 --confirm 前，请让用户确认账号、目标实例、可核对的当次费率及具体操作。Breeze TTS 2 自托管仅用于研究和非商用。",
             "After submitting a job, read job status and collect when needed. Use the local artifact path from a completed job. Reuse the same job ID on retry."
             if english else "提交后读取 job 进度，必要时 collect 核对并取回。任务完成后可读取作品本机路径，重试时沿用原任务 ID。",
+            "Choose a compatible running instance from state. Deploy H3 with project h3. For H3 video, pass --engine 'MiniMax H3'. The desktop app can open a deployed private ComfyUI."
+            if english else "从 state 选择兼容的在线实例。用 deploy 的 h3 项目部署 H3，提交视频时指定 --engine 'MiniMax H3'。私有 ComfyUI 从桌面 App 打开。",
             "Saved local outputs are available across accounts. In Studio, users can open an output folder or save a copy to a Google Drive sync folder."
             if english else "已保存的本机作品可跨账号查看。用户可在创作页打开作品文件夹，或转存到 Google Drive 同步目录。",
             "Keep credentials on the user's computer. Import only an authorized official Colab CLI token file by path. A cached observation describes the recorded time, and a plan filter describes catalog coverage."
@@ -56,10 +59,11 @@ def guide(language):
             "connect": "connect ACCOUNT [--client-config PATH] --confirm",
             "import-cli": "import-cli ACCOUNT --token-file PATH --confirm",
             "claim-record": "claim-record ACCOUNT BENEFIT --status available|claimed|not_eligible|unverified [--note TEXT] --confirm",
-            "instance-start": "instance-start ACCOUNT --gpu CPU|T4|L4|A100|H100|G4 --name NAME --confirm",
+            "instance-start": "instance-start ACCOUNT --gpu " + "|".join(HARDWARE) + " --name NAME [--high-mem] --confirm",
             "instance-stop": "instance-stop ACCOUNT INSTANCE --confirm",
+            "deploy": "deploy ACCOUNT INSTANCE --project " + "|".join(PROJECTS) + " [--legacy-nodes] [--job-id JOB] --confirm",
             "tts": "tts ACCOUNT INSTANCE --title TITLE --text TEXT [--instruction TEXT] [--job-id JOB] --confirm",
-            "video": "video ACCOUNT INSTANCE --title TITLE --text TEXT [--ratio landscape|portrait] [--seconds 3|5] [--seed N] [--job-id JOB] --confirm",
+            "video": "video ACCOUNT INSTANCE --title TITLE --text TEXT [--engine 'MiniMax H3'|Wan2.2] [--ratio landscape|portrait] [--seconds 3|5|10|15] [--seed N] [--job-id JOB] --confirm",
             "mux": "mux --title TITLE (--video-job JOB|--video-path PATH) (--audio-job JOB|--audio-path PATH) [--account ID] [--job-id JOB]",
             "collect": "collect JOB [--account ID]",
         },
@@ -101,11 +105,18 @@ def parser():
 
     start = commands.add_parser("instance-start")
     start.add_argument("account")
-    start.add_argument("--gpu", choices=GPUS, required=True)
+    start.add_argument("--gpu", choices=HARDWARE, required=True)
     start.add_argument("--name", required=True)
+    start.add_argument("--high-mem", action="store_true")
     stop = commands.add_parser("instance-stop")
     stop.add_argument("account")
     stop.add_argument("instance")
+    deploy = commands.add_parser("deploy")
+    deploy.add_argument("account")
+    deploy.add_argument("instance")
+    deploy.add_argument("--project", choices=PROJECTS, required=True)
+    deploy.add_argument("--legacy-nodes", action="store_true")
+    deploy.add_argument("--job-id")
 
     for name in ("tts", "video"):
         command = commands.add_parser(name)
@@ -118,8 +129,9 @@ def parser():
         if name == "tts":
             command.add_argument("--instruction", default="")
         else:
+            command.add_argument("--engine", choices=("MiniMax H3", "Wan2.2"), default="Wan2.2")
             command.add_argument("--ratio", choices=("landscape", "portrait"), default="landscape")
-            command.add_argument("--seconds", type=int, choices=(3, 5), default=5)
+            command.add_argument("--seconds", type=int, choices=(3, 5, 10, 15), default=5)
             command.add_argument("--seed", type=int)
 
     mux = commands.add_parser("mux")
@@ -130,7 +142,7 @@ def parser():
         source = mux.add_mutually_exclusive_group(required=True)
         source.add_argument(f"--{name}-job")
         source.add_argument(f"--{name}-path")
-    for command in (add, connect, importer, claim, start, stop):
+    for command in (add, connect, importer, claim, start, stop, deploy):
         command.add_argument("--confirm", dest="confirmed", action="store_true", help="user confirmed this operation")
     return cli
 
@@ -200,7 +212,7 @@ def main(argv=None):
     if command == "guide":
         print(json.dumps(guide(args.language), ensure_ascii=False))
         return 0
-    if command in {"tts", "video", "mux"}:
+    if command in {"tts", "video", "mux", "deploy"}:
         body.setdefault("job_id", uuid.uuid4().hex)
     if command == "video":
         # A retry with the same job ID must reproduce the original job spec.
@@ -223,7 +235,7 @@ def main(argv=None):
         return 0
     except UserError as exc:
         result = {"error": str(exc), "status": exc.status}
-        if command in {"tts", "video", "mux"}:
+        if command in {"tts", "video", "mux", "deploy"}:
             result["job_id"] = body["job_id"]
         print(json.dumps(result, ensure_ascii=False))
         return 1

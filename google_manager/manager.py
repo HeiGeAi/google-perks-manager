@@ -9,8 +9,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .accounts import AccountStore, UserError, empty_observation, label, timestamp
-from .colab import GPUS, Colab, ProviderError
+from .colab import GPUS, HARDWARE, HIGH_RAM_CHOICES, Colab, ProviderError
+from .deployment import H3_REGIONS, PROJECTS
 from .drive_archive import DriveArchive
+from .editor_tunnel import EditorTunnels
 from .oauth import GoogleOAuth
 from .production import Production
 
@@ -29,6 +31,7 @@ class Manager:
         self.client_config = client_config or os.environ.get("GOOGLE_MANAGER_OAUTH_CLIENT")
         self.production = Production(self)
         self.drive = DriveArchive(self.store, self.production)
+        self.editor_tunnels = EditorTunnels()
 
     def benefits(self):
         try:
@@ -67,7 +70,11 @@ class Manager:
                 "benefit_status": account["benefit_status"],
                 "operation_pending": bool(account.get("operation_pending")),
             })
-        return {"accounts": accounts, "benefits": self.benefits(), "supported_gpus": list(GPUS)}
+        return {"accounts": accounts, "benefits": self.benefits(), "supported_gpus": list(GPUS),
+                "supported_hardware": list(HARDWARE), "high_ram_hardware": sorted(HIGH_RAM_CHOICES),
+                "h3_regions": sorted(H3_REGIONS),
+                "deployment_projects": {key: {k: v for k, v in row.items() if k not in {"port", "recipe"}}
+                                        for key, row in PROJECTS.items()}}
 
     def connect(self, account_id, body, redirect_uri):
         with self.store.account_lock(account_id):
@@ -133,13 +140,15 @@ class Manager:
         requested_at = datetime.now(timezone.utc)
         received = self.colab.observe(token)
         names = account["instance_names"]
+        hardware = {item["id"]: item.get("hardware") for item in account["observation"]["instances"]}
         observation = {
             **empty_observation(),
             **received,
             "status": "current",
             "checked_at": timestamp(),
             "instances": [
-                {"id": item["id"], "name": names.get(item["id"]) or item["id"], "gpu": item["gpu"], "region": item.get("region")}
+                {"id": item["id"], "name": names.get(item["id"]) or item["id"], "gpu": item["gpu"],
+                 "region": item.get("region"), "machine_shape": item.get("machine_shape"), "hardware": hardware.get(item["id"])}
                 for item in received["instances"]
             ],
         }
@@ -170,7 +179,8 @@ class Manager:
         if body.get("confirmed") is not True:
             raise UserError("请先确认 Colab 启动与可能的算力消耗。", 403)
         gpu = body.get("gpu")
-        if gpu not in GPUS:
+        high_mem = body.get("high_mem", False)
+        if gpu not in HARDWARE or type(high_mem) is not bool or (high_mem and gpu not in HIGH_RAM_CHOICES):
             raise UserError("请选择支持的 Colab 硬件。")
         name = label(body.get("name"), "实例名称", 48)
         with self.store.account_lock(account_id):
@@ -196,8 +206,9 @@ class Manager:
             pending = account.get("operation_pending")
             if pending and pending["name"] != name:
                 raise UserError("上次启动结果待核对。请保留上次的实例名称再试。", 409)
-            if pending and pending["gpu"] != gpu:
-                previous_id = self.colab.inspect_start(token, pending["gpu"], pending["nonce"])
+            if pending and (pending["gpu"], pending.get("high_mem", False)) != (gpu, high_mem):
+                previous_shape = {"high_mem": True} if pending.get("high_mem") else {}
+                previous_id = self.colab.inspect_start(token, pending["gpu"], pending["nonce"], **previous_shape)
                 if previous_id:
                     self.store.update(
                         account_id, instance_names={**account["instance_names"], previous_id: name},
@@ -205,10 +216,10 @@ class Manager:
                     )
                     raise UserError("Google 已给上一请求分配实例，请刷新核对后操作。", 409)
                 pending = None
-            pending = pending or {"nonce": uuid.uuid4().hex, "name": name, "gpu": gpu}
+            pending = pending or {"nonce": uuid.uuid4().hex, "name": name, "gpu": gpu, "high_mem": high_mem}
             self.store.update(account_id, operation_pending=pending)
             try:
-                instance_id = self.colab.start(token, gpu, pending["nonce"])
+                instance_id = self.colab.start(token, gpu, pending["nonce"], **({"high_mem": True} if high_mem else {}))
             except ProviderError as exc:
                 if not exc.uncertain:
                     self.store.update(account_id, operation_pending=None)
@@ -234,6 +245,28 @@ class Manager:
                 "message": "已从当前列表核对新实例。" if visible else "Colab 已回复分配，实例暂未出现在读取结果中。",
             }
 
+    def inspect_instance(self, account_id, instance_id):
+        with self.store.account_lock(account_id):
+            account = self.store.one(account_id)
+            token = self.oauth.access(account, self.store)
+            observation = self._observe(account, token)
+            instance = next((row for row in observation["instances"] if row["id"] == instance_id), None)
+            if not instance:
+                raise UserError("当前账号已查不到这个 Colab 实例。", 404)
+            instance["hardware"] = {**self.colab.inspect(token, instance_id), "checked_at": timestamp()}
+            self.store.update(account_id, observation=observation)
+            return instance
+
+    def open_editor(self, job_id):
+        job = self.production.get(job_id)
+        if job["kind"] != "deploy" or job["state"] != "done" or PROJECTS[job["project"]]["port"] is None:
+            raise UserError("请先在这台实例上完成应用部署。", 409)
+        account_id, instance_id = job["account_id"], job["instance_id"]
+        with self.store.account_lock(account_id):
+            token = self.oauth.access(self.store.one(account_id), self.store)
+            details = self.colab.editor_connection(token, instance_id, job["project"])
+            return self.editor_tunnels.open(account_id, instance_id, details)
+
     def stop(self, account_id, body):
         if body.get("confirmed") is not True:
             raise UserError("请确认释放时已保存实例中的文件。", 403)
@@ -247,6 +280,7 @@ class Manager:
                 token = self.oauth.access(account, self.store)
                 # The provider rechecks the exact assignment before release.
                 self.colab.stop(token, target)
+                self.editor_tunnels.close_for(account_id, target)
             except UserError as exc:
                 self.record_error(account, exc)
                 raise

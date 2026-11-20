@@ -190,7 +190,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         configuration.websiteDataStore = .nonPersistent()
         for name in ["openGoogleAuthorization", "chooseOAuthClient", "chooseCliToken", "getAccountSelection", "setAccountSelection",
                      "pickMediaFile", "pickDriveFolder", "revealProductionFile", "copyCommunityRemark", "getAppInfo",
-                     "setLanguage", "copyAgentPrompt", "checkForUpdate", "downloadUpdate", "installUpdate"] {
+                     "setLanguage", "copyAgentPrompt", "checkForUpdate", "downloadUpdate", "installUpdate", "openPrivateEditor"] {
             configuration.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: name)
         }
         webView = WKWebView(frame: content.bounds, configuration: configuration)
@@ -606,6 +606,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
                   url.user == nil, url.password == nil, url.port == nil, url.fragment == nil,
                   ["/o/oauth2/auth", "/o/oauth2/v2/auth"].contains(url.path) else {
                 replyHandler(nil, localized("授权网址校验失败。请重新连接 Google。", "The authorization URL could not be verified. Connect to Google again."))
+                return
+            }
+            replyHandler(NSWorkspace.shared.open(url), nil)
+        case "openPrivateEditor":
+            guard webView.url?.fragment == "apps", let port = message.body as? Int, (1024...65535).contains(port),
+                  let url = URL(string: "http://127.0.0.1:\(port)/") else {
+                replyHandler(nil, localized("应用入口无效。", "Invalid private application address."))
                 return
             }
             replyHandler(NSWorkspace.shared.open(url), nil)

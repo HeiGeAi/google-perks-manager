@@ -44,6 +44,7 @@ function appName() {
 
 const pageLabels = {
   colab: ["Colab", "Colab"],
+  apps: ["应用部署", "Deploy apps"],
   studio: ["创作", "Studio"],
   benefits: ["权益", "Perks"],
   accounts: ["账号管理", "Accounts"],

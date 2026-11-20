@@ -12,7 +12,7 @@ AGENT_HEADER = "X-Google-Manager-Agent"
 PLAN_TIERS = ("pro", "ultra-5x", "ultra-20x")
 READ_COMMANDS = {"state", "benefits", "benefit", "jobs", "job"}
 CONFIRM_COMMANDS = {
-    "account-add", "connect", "import-cli", "claim-record", "instance-start", "instance-stop", "tts", "video",
+    "account-add", "connect", "import-cli", "claim-record", "instance-start", "instance-stop", "tts", "video", "deploy",
 }
 COMMANDS = READ_COMMANDS | CONFIRM_COMMANDS | {"refresh", "mux", "collect"}
 ID = re.compile(r"[a-f0-9]{32}")
@@ -105,6 +105,8 @@ def benefit_cards(manager, plan, account, benefit_id=None, *, language=None):
 def agent_job(production, row):
     fields = ("id", "title", "kind", "mode", "account_id", "instance_id", "state", "phase", "created_at", "updated_at")
     result = {key: redact_email(row.get(key)) for key in fields}
+    if row["kind"] == "deploy":
+        return {**result, "project": row["project"], "hardware": row.get("hardware")}
     if row["state"] == "done":
         try:
             _, path = production.artifact_path(row["id"])
@@ -157,7 +159,8 @@ def execute(manager, dispatch, command, body):
             dispatch(account_path + "/refresh", {})
         state = manager.state()
         accounts = [agent_account(row) for row in state["accounts"] if account_id is None or row["id"] == account_id]
-        return 200, {"accounts": accounts, "supported_gpus": state["supported_gpus"]}
+        capabilities = ("supported_gpus", "supported_hardware", "high_ram_hardware", "deployment_projects", "h3_regions")
+        return 200, {"accounts": accounts, **{key: state[key] for key in capabilities}}
 
     if command in {"benefits", "benefit"}:
         benefit_id = body.get("benefit") if command == "benefit" else None
@@ -204,7 +207,7 @@ def execute(manager, dispatch, command, body):
         return code, benefit_cards(manager, None, account, benefit_id)
     if command == "instance-start":
         return dispatch(account_path + "/instances", {"gpu": body.get("gpu"), "name": body.get("name"),
-                                                       "confirmed": True})
+                                                       "high_mem": body.get("high_mem", False), "confirmed": True})
     if command == "instance-stop":
         return dispatch(account_path + "/instances/stop", {"instance_id": body.get("instance"), "confirmed": True})
 
@@ -212,7 +215,10 @@ def execute(manager, dispatch, command, body):
            "text": body.get("text"), "account_id": account_id, "instance_id": body.get("instance"), "confirmed": True}
     if command == "tts":
         job["instruction"] = body.get("instruction", "")
+    elif command == "deploy":
+        job.update(project=body.get("project"), legacy_nodes=body.get("legacy_nodes", False))
     else:
         job.update({key: body.get(key) for key in ("ratio", "seconds", "seed")})
+        job["engine"] = body.get("engine", "Wan2.2")
     code, payload = dispatch("/api/production/jobs", job)
     return code, {"job": agent_job(production, payload["job"])}
