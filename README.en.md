@@ -16,7 +16,7 @@ An independent desktop app for Google plan perks, per-account Colab instances an
 | System | Install |
 | --- | --- |
 | macOS 14 or newer, Apple silicon | Download `GooglePerksManager-macOS-arm64.zip`, extract it, and move `谷歌羊毛管理器.app` to Applications. |
-| Windows 10 22H2 or Windows 11, x64 | Run `GooglePerksManager-Windows-x64-Setup.exe`. Setup installs Microsoft Edge WebView2 when needed. |
+| Windows x64, build 19041 or later | Run `GooglePerksManager-Windows-x64-Setup.exe`. Setup installs Microsoft Edge WebView2 when needed. |
 
 macOS can show a developer verification notice when you first open an app downloaded from GitHub. The project signs its release manifest. Check the release page for the SHA-256 of the Windows installer. [Apple’s first-launch guidance](https://support.apple.com/en-us/102445)
 

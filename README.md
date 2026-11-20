@@ -16,7 +16,7 @@
 | 系统 | 下载及安装 |
 | --- | --- |
 | macOS 14 或更新版本，Apple 芯片 | 下载 `GooglePerksManager-macOS-arm64.zip`，解压后将“谷歌羊毛管理器”拖进“应用程序”。 |
-| Windows 10 22H2 或 Windows 11，x64 | 下载 `GooglePerksManager-Windows-x64-Setup.exe`，按向导安装。需要时安装器会补装 Microsoft Edge WebView2。 |
+| Windows x64，系统内部版本 19041 或更新 | 下载 `GooglePerksManager-Windows-x64-Setup.exe`，按向导安装。需要时安装器会补装 Microsoft Edge WebView2。 |
 
 首次打开从 GitHub 下载的 macOS 版时，系统可能显示开发者验证提示。Windows 发行包使用项目的更新签名，可对照发行页的 SHA-256 校验。 [Apple 的首次打开说明](https://support.apple.com/zh-cn/102445)
 

@@ -31,7 +31,7 @@ def guide(language):
         "bundle_usage": "<GoogleManagerService absolute path> --agent [--data-dir PATH] COMMAND",
         "source_usage": "python3 -m google_manager.agent [--data-dir PATH] COMMAND",
         "workflows": [
-            "Open the app on this Mac. Read state to choose an account and verify its connection before acting."
+            "Open the app on this computer. Read state to choose an account and verify its connection before acting."
             if english else "在本机打开 App。操作前先读取 state，选择账号并核对授权状态。",
             "For benefits, read the catalog and official claim and verification URLs. Have the user complete any Google consent, financial or subscription step. Record claimed only after verifying Google's result."
             if english else "在权益目录读取官方领取、核验地址和步骤。由用户完成 Google 授权、计费或订阅操作，核验到账结果后再记录已领取。",
@@ -39,7 +39,7 @@ def guide(language):
             if english else "使用 --confirm 前，请让用户确认账号、目标实例、可核对的当次费率及具体操作。Breeze TTS 2 自托管仅用于研究和非商用。",
             "After submitting a job, read job status and collect when needed. Use the local artifact path from a completed job. Reuse the same job ID on retry."
             if english else "提交后读取 job 进度，必要时 collect 核对并取回。任务完成后可读取作品本机路径，重试时沿用原任务 ID。",
-            "Keep credentials on the user's Mac. Import only an authorized official Colab CLI token file by path. A cached observation describes the recorded time, and a plan filter describes catalog coverage."
+            "Keep credentials on the user's computer. Import only an authorized official Colab CLI token file by path. A cached observation describes the recorded time, and a plan filter describes catalog coverage."
             if english else "凭证保存在本机。导入官方 Colab CLI 授权时只传用户指定的文件路径。历史快照对应记录时间，方案筛选对应目录范围。",
         ],
         "commands": {
@@ -145,7 +145,7 @@ def discovery(data_dir):
         ensure_process_running(pid)
         return port, token
     except (OSError, ValueError, KeyError, TypeError, UserError):
-        raise UserError("Open Google Perks Manager on this Mac and use the app's local data directory.", 503) from None
+        raise UserError("Open Google Perks Manager on this computer and use the app's local data directory.", 503) from None
 
 
 def request(data_dir, body):
