@@ -6,6 +6,23 @@ An independent desktop app for Google plan perks, per-account Colab instances an
 
 ## App screenshots and walkthrough
 
+### macOS v0.10.2 live test
+
+On November 21, 2026, we ran the released app on an Apple silicon Mac, chose the default **Start A100 & deploy** option, and generated *Wind by the Seaside Window* with MiniMax H3 in private ComfyUI. The clip runs for 4.46 seconds at 832×480 and 24 fps, with 32 kHz stereo audio. [v0.10.2 release](https://github.com/HeiGeAi/google-perks-manager/releases/tag/v0.10.2)
+
+https://github.com/user-attachments/assets/72617256-8002-4e41-8606-453c9c4901a9
+
+| Measured item | Result |
+| --- | --- |
+| Colab runtime | High-RAM A100 in Singapore with **80 GiB of VRAM** and 167.1 GiB of system RAM |
+| First click to confirmed release | **15m 10s**, including retries and deployment. Allocation to release took 10m 29s |
+| Allocation to deployment ready | 7m 20s |
+| Video generation and retrieval | **1m 26s**, from submitting the ComfyUI job to saving the MP4 |
+| Actual charge | **0.9161 CU**, measured from the same account's live balance before launch and after release |
+| After release | Zero running instances and 0 CU/hour. The saved audio and video decoded in full on the Mac |
+
+### Screenshots and walkthrough
+
 These are **real screenshots of the released v0.9.0 app running on an Apple silicon Mac**. The accounts, compute usage, and output files are demo data.
 
 https://github.com/user-attachments/assets/da51b224-ed1f-4b49-9867-86d0279f1a79
@@ -61,7 +78,7 @@ In **Colab → Start instance → MiniMax H3 video**, the default is **A100 with
 
 If Colab assigns a region where H3 cannot be deployed, the app releases the new instance and shows the outcome. After a temporary launch error, it checks the original request and can continue deployment on the assigned instance.
 
-In the Singapore test on 2026-11-21, Colab assigned an A100 with **80 GiB of VRAM and 167.1 GiB of system RAM**. Generating and retrieving a 5.17-second clip with audio took **5m 26s**. From observed allocation to release, the instance ran for **11m 54s** and Colab charged **1.5097 CU**. Hardware and rates depend on what Colab assigns.
+In the v0.10.0 test on November 21, 2026, Colab assigned an A100 in Singapore with **80 GiB of VRAM and 167.1 GiB of system RAM**. Generating and retrieving a 5.17-second clip with audio took **5m 26s**. From observed allocation to release, the instance ran for **11m 54s** and Colab charged **1.5097 CU**. Hardware and rates depend on what Colab assigns.
 
 G4 (96 GB VRAM on a full GPU) and H100 are selectable. L4 and T4 are preview options with a smaller frame size and sufficient system RAM. [Official CLI hardware options](https://github.com/googlecolab/google-colab-cli/blob/main/docs/01_session_management.md) · [ComfyUI H3 guide](https://blog.comfy.org/p/minimax-h3-day-0-support-in-comfyui)
 
