@@ -12,9 +12,12 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 from urllib.parse import parse_qs, urlsplit
 
+from paramiko import Transport
+
 from google_manager.accounts import UserError
 from google_manager.colab import Colab, ProviderError
 from google_manager.colab_worker import observe, region_from_provider
+from google_manager.editor_tunnel import EditorListener, WebSocketStream
 from google_manager.local_files import owned
 from google_manager.manager import ACK_VISIBILITY_SECONDS, Manager
 from google_manager.oauth import COLAB_SCOPE, EMAIL_SCOPE, GoogleOAuth
@@ -106,6 +109,24 @@ class BackendTests(unittest.TestCase):
         self.assertEqual(self.provider.stopped, [("fixture-b", "gpu-other")])
         self.assertEqual(operation["status"], "pending")
         self.assertIsNone(self.manager.store.one(b)["observation"]["hourly_cu"])
+
+    def test_stop_confirms_release_while_editor_transport_is_still_running(self):
+        _, account = self.accounts()
+        connection = Mock(connected=True)
+        connection.shutdown.side_effect = lambda: setattr(connection, "connected", False)
+        transport = Transport(WebSocketStream(connection, "fixture.example.test"))
+        listener = EditorListener(transport, 18898)
+        self.addCleanup(listener.close)
+        self.manager.editor_tunnels.listeners[(account, "gpu-other")] = listener
+        transport.active = True
+
+        with patch.object(transport, "is_alive", return_value=True):
+            operation = self.manager.stop(account, {"instance_id": "gpu-other", "confirmed": True})
+
+        self.assertEqual(operation["status"], "confirmed")
+        self.assertEqual(self.manager.store.one(account)["observation"]["instances"], [])
+        self.assertFalse(self.manager.editor_tunnels.listeners)
+        self.assertFalse(connection.connected)
 
     def test_uncertain_start_reuses_request_and_guards_duplicate(self):
         a, _ = self.accounts()

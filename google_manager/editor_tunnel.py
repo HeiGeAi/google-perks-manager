@@ -17,6 +17,11 @@ class WebSocketStream:
         self.host = host
         self.buffer = bytearray()
 
+    @property
+    def _closed(self):
+        # Paramiko checks this socket flag while its transport thread shuts down.
+        return not self.connection.connected
+
     def settimeout(self, timeout):
         self.connection.settimeout(timeout)
 
