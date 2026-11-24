@@ -1,8 +1,10 @@
 import base64
 import hashlib
 import http.client
+import io
 import json
 import os
+import sys
 import tempfile
 import threading
 import unittest
@@ -10,17 +12,19 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
+from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlsplit
 
 from paramiko import Transport
 
 from google_manager.accounts import UserError
 from google_manager.colab import Colab, ProviderError
+from google_manager.colab_auth import CLI_REDIRECT
 from google_manager.colab_worker import observe, region_from_provider
 from google_manager.editor_tunnel import EditorListener, WebSocketStream
 from google_manager.local_files import owned
 from google_manager.manager import ACK_VISIBILITY_SECONDS, Manager
-from google_manager.oauth import COLAB_SCOPE, EMAIL_SCOPE, GoogleOAuth
+from google_manager.oauth import COLAB_SCOPE, EMAIL_SCOPE, TOKEN_URL, USERINFO_URL, GoogleOAuth
 from google_manager.server import LocalServer
 
 
@@ -270,6 +274,10 @@ class BackendTests(unittest.TestCase):
 
 
 class OAuthTests(unittest.TestCase):
+    client = {"client_id": "fixture.apps.googleusercontent.com", "client_secret": "fixture"}
+    verifier = "v" * 64
+    cli_url = "https://accounts.google.com/o/oauth2/auth"
+
     def test_login_uses_pkce_and_consumes_state_once(self):
         oauth = GoogleOAuth()
         client = {"client_id": "fixture.apps.googleusercontent.com", "client_secret": "fixture"}
@@ -322,13 +330,10 @@ class OAuthTests(unittest.TestCase):
     def test_cli_code_verifies_the_selected_profile_before_saving(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
-        provider, worker = Mock(), Mock()
-        provider.authorize.return_value = (worker, "https://accounts.google.com/o/oauth2/auth")
-        worker.exchange.return_value = (
-            {"access_token": "fixture-access", "refresh_token": "fixture-refresh", "expires_in": 3600,
-             "scope": f"openid {COLAB_SCOPE} {EMAIL_SCOPE}"},
-            {"client_id": "fixture.apps.googleusercontent.com", "client_secret": "fixture"},
-        )
+        provider = Mock()
+        provider.authorize.return_value = (self.cli_url, self.client, self.verifier)
+        payload = {"access_token": "fixture-access", "refresh_token": "fixture-refresh",
+                   "expires_in": 3600, "scope": f"openid {COLAB_SCOPE} {EMAIL_SCOPE}"}
         manager = Manager(Path(tmp.name) / "data", Path(tmp.name) / "missing-catalog", colab=provider)
         self.addCleanup(manager.store.close)
         self.addCleanup(manager.oauth.close)
@@ -338,21 +343,27 @@ class OAuthTests(unittest.TestCase):
         connect = manager.connect(target, {}, "http://127.0.0.1:18782/oauth/callback")
         self.assertEqual(connect["flow"], "cli")
         provider.authorize.assert_called_once_with()
-        with self.assertRaises(UserError):
-            manager.finish_cli_login(existing, connect["attempt"], "fixture-code")
-        worker.exchange.assert_not_called()
-        with patch("google_manager.oauth.google_json", return_value={
-            "email": "existing@example.com", "sub": "existing-provider-id", "email_verified": True,
-        }):
+        with patch("google_manager.oauth.google_json", side_effect=[
+            payload, {"email": "existing@example.com", "sub": "existing-provider-id", "email_verified": True},
+        ]) as google:
+            with self.assertRaises(UserError):
+                manager.finish_cli_login(existing, connect["attempt"], "fixture-code")
+            google.assert_not_called()
             with self.assertRaises(UserError):
                 manager.finish_cli_login(target, connect["attempt"], "fixture-code")
         self.assertFalse(manager.store.has_credential(target))
 
         connect = manager.connect(target, {}, "http://127.0.0.1:18782/oauth/callback")
-        with patch("google_manager.oauth.google_json", return_value={
-            "email": "new@example.com", "sub": "new-provider-id", "email_verified": True,
-        }):
+        with patch("google_manager.oauth.google_json", side_effect=[
+            payload, {"email": "new@example.com", "sub": "new-provider-id", "email_verified": True},
+        ]) as google:
             manager.finish_cli_login(target, connect["attempt"], "fixture-code")
+        self.assertEqual(google.call_args_list[0].args, (TOKEN_URL,))
+        self.assertEqual(google.call_args_list[0].kwargs["form"], {
+            **self.client, "code": "fixture-code", "code_verifier": self.verifier,
+            "grant_type": "authorization_code", "redirect_uri": CLI_REDIRECT,
+        })
+        self.assertEqual(google.call_args_list[1].args, (USERINFO_URL,))
         self.assertEqual(manager.store.credential(existing)["access_token"], "existing-token")
         self.assertEqual(manager.store.credential(target)["access_token"], "fixture-access")
         self.assertNotIn("fixture-access", json.dumps(manager.state()))
@@ -362,16 +373,58 @@ class OAuthTests(unittest.TestCase):
     def test_cancelling_an_old_attempt_leaves_a_new_cli_login_alive(self):
         oauth = GoogleOAuth()
         account = {"id": "a", "email": "a@example.com"}
-        provider, first, second = Mock(), Mock(), Mock()
-        provider.authorize.side_effect = [(first, "google"), (second, "google")]
+        provider = Mock()
+        provider.authorize.return_value = (self.cli_url, self.client, self.verifier)
         older = oauth.begin_cli(account, provider)
         newer = oauth.begin_cli(account, provider)
-        first.close.assert_called_once()
+        self.assertNotEqual(older["attempt"], newer["attempt"])
         oauth.cancel("a", older["attempt"])
-        second.close.assert_not_called()
         self.assertTrue(oauth.connecting("a"))
         oauth.cancel("a", newer["attempt"])
-        second.close.assert_called_once()
+        self.assertFalse(oauth.connecting("a"))
+
+    def test_cli_worker_prepares_a_matching_pkce_challenge_and_exits(self):
+        url, client, verifier = Colab(python=sys.executable).authorize()
+        parts = urlsplit(url)
+        params = parse_qs(parts.query)
+        expected = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode("ascii")).digest()).rstrip(b"=")
+        self.assertEqual(parts.hostname, "accounts.google.com")
+        self.assertEqual(params["redirect_uri"], [CLI_REDIRECT])
+        self.assertEqual(params["code_challenge_method"], ["S256"])
+        self.assertTrue(params["code_challenge"] == [expected.decode("ascii")])
+        self.assertTrue(params["client_id"] == [client["client_id"]])
+        self.assertEqual(params["token_usage"], ["remote"])
+        self.assertNotIn("client_secret", params)
+        self.assertNotIn("code_verifier", params)
+
+    def test_cli_timeout_and_rejected_code_allow_a_fresh_attempt(self):
+        oauth = GoogleOAuth()
+        account = {"id": "a", "email": "a@example.com", "subject": None}
+        provider = Mock()
+        provider.authorize.return_value = (self.cli_url, self.client, self.verifier)
+        first = oauth.begin_cli(account, provider)["attempt"]
+        rejected = HTTPError(TOKEN_URL, 400, "Bad Request", {},
+                             io.BytesIO(b'{"error":"invalid_grant","error_description":"private diagnostic"}'))
+        with patch("google_manager.oauth.build_opener") as build_opener:
+            request = build_opener.return_value.open
+            request.side_effect = [URLError(TimeoutError("private diagnostic")), rejected]
+            with self.assertRaises(UserError) as failed:
+                oauth.finish_cli(account, first, "fixture-code")
+            self.assertEqual(failed.exception.status, 504)
+            self.assertIn("超时", str(failed.exception))
+            self.assertNotIn("private diagnostic", str(failed.exception))
+            with self.assertRaises(UserError) as expired:
+                oauth.finish_cli(account, first, "fixture-code")
+            self.assertEqual(expired.exception.status, 409)
+            request.assert_called_once()
+            second = oauth.begin_cli(account, provider)["attempt"]
+            self.assertNotEqual(first, second)
+            with self.assertRaises(UserError) as denied:
+                oauth.finish_cli(account, second, "fixture-code")
+            self.assertEqual(denied.exception.status, 401)
+            self.assertIn("拒绝", str(denied.exception))
+            self.assertNotIn("private diagnostic", str(denied.exception))
+            self.assertEqual(request.call_count, 2)
         self.assertFalse(oauth.connecting("a"))
 
     def test_region_only_from_https_provider_host(self):

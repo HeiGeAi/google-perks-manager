@@ -9,6 +9,8 @@ internal static class InstallationSmoke
     internal static async Task RunAsync(CoreWebView2 view, string report, string version)
     {
         string stage = "native workspace";
+        bool checkGoogleOAuth = string.Equals(Environment.GetEnvironmentVariable("GOOGLE_MANAGER_SMOKE_GOOGLE_OAUTH"),
+            "true", StringComparison.OrdinalIgnoreCase);
         try
         {
             await Expect(view, "document.querySelector('.local-indicator.is-ready') && window.googlePerksDesktop");
@@ -46,6 +48,23 @@ internal static class InstallationSmoke
                 new URL(document.querySelector('dialog a').href).hostname === 'accounts.google.com' &&
                 new URL(document.querySelector('dialog a').href).searchParams.get('code_challenge_method') === 'S256'
                 """);
+            if (checkGoogleOAuth)
+            {
+                stage = "Google authorization code exchange";
+                await Execute(view, """
+                    { const form = document.querySelector('dialog form');
+                      form.elements.code.value = 'qa-invalid-unissued-code';
+                      form.requestSubmit(); }
+                    """);
+                await Expect(view, """
+                    !document.querySelector('dialog[aria-busy=true]') &&
+                    !document.querySelector('dialog [name=code]') &&
+                    document.querySelector('dialog .dialog-problem:not([hidden])')?.textContent.includes('Google rejected this authorization code') &&
+                    document.querySelector('dialog [data-oauth-actions] [data-action=connect-account]')
+                    """);
+                await Execute(view, "document.querySelector('dialog [data-oauth-actions] [data-action=connect-account]').click()");
+                await Expect(view, "document.querySelector('dialog[open] [name=code]')");
+            }
             await Execute(view, "document.querySelector('dialog [data-action=close-dialog]').click()");
             await Expect(view, "!document.querySelector('dialog[open]')");
 
@@ -126,7 +145,8 @@ internal static class InstallationSmoke
             Write(report, new
             {
                 installed = true, nativeWebView2 = true, version,
-                languages = new[] { "zh-CN", "en" }, accountAlias = true, oauthGooglePage = true, tiers = 3,
+                languages = new[] { "zh-CN", "en" }, accountAlias = true, oauthGooglePage = true,
+                oauthGoogleCodeExchange = checkGoogleOAuth, tiers = 3,
                 studioFolderAction = true, driveProjectDialog = true, h3LaunchMenu = true, h3DefaultA100HighRam = true,
                 deployableProjects = 5,
             });

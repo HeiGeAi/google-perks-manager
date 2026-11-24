@@ -11,7 +11,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from .accounts import UserError
-from .colab_auth import ColabAuthorization
+from .colab_auth import prepare_authorization
 
 
 GPUS = ("CPU", "T4", "L4", "A100", "H100", "G4")
@@ -92,7 +92,7 @@ class Colab:
         return self._request("observe", token)
 
     def authorize(self):
-        return ColabAuthorization.start(self.command, REPO)
+        return prepare_authorization(self.command, REPO)
 
     def start(self, token, gpu, nonce, *, high_mem=False):
         return self._request("start", token, gpu=gpu, nonce=nonce, high_mem=high_mem)["instance_id"]

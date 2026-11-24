@@ -1,15 +1,9 @@
-"""Private process adapter for the official Colab CLI browser authorization."""
+"""Prepare Colab CLI's Google authorization request in its own environment."""
 
 import json
-import logging
-import os
+import re
 import subprocess
-import sys
-import threading
-from datetime import datetime, timezone
 from importlib.resources import files
-from queue import Empty, Queue
-from types import SimpleNamespace
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from .accounts import UserError
@@ -19,26 +13,7 @@ LIFETIME = 600
 MAX_CODE = 4096
 MAX_PACKET = 16 * 1024
 UNAVAILABLE = "无法启动 Colab 官方授权，请重新连接 Google。"
-REJECTED = "Google 未接受这次授权码。请重新授权并复制新码。"
-
-
-def read_line(stream, limit, timeout):
-    result = Queue(maxsize=1)
-
-    def read():
-        try:
-            result.put(stream.readline(limit))
-        except (OSError, ValueError):
-            result.put(None)
-
-    threading.Thread(target=read, daemon=True).start()
-    try:
-        line = result.get(timeout=timeout)
-    except Empty:
-        raise EOFError from None
-    if not line:
-        raise EOFError
-    return line
+CLI_REDIRECT = "https://sdk.cloud.google.com/applicationdefaultauthcode.html"
 
 
 def google_authorization_url(url):
@@ -51,85 +26,46 @@ def google_authorization_url(url):
     return urlunsplit(parts._replace(query=urlencode(params)))
 
 
-class ColabAuthorization:
-    def __init__(self, process):
-        self.process = process
-
-    @classmethod
-    def start(cls, command, cwd):
-        if not command:
-            raise UserError(UNAVAILABLE, 503)
-        try:
-            process = subprocess.Popen(
-                [*command, "--authorize"], cwd=cwd, stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-            )
-        except OSError:
-            raise UserError(UNAVAILABLE, 503) from None
-        worker = cls(process)
-        try:
-            packet = json.loads(read_line(process.stdout, MAX_PACKET, 12))
-            return worker, google_authorization_url(packet["url"])
-        except (EOFError, OSError, ValueError, KeyError, TypeError):
-            worker.close()
-            raise UserError(UNAVAILABLE, 503) from None
-
-    def exchange(self, code):
-        try:
-            output, _ = self.process.communicate((code + "\n").encode("ascii"), timeout=30)
-            if not output or len(output) > MAX_PACKET or self.process.returncode:
-                raise ValueError
-            packet = json.loads(output)
-            return packet["token"], packet["client"]
-        except subprocess.TimeoutExpired:
-            raise UserError("Google 核对授权码超时。请重新连接 Google。", 504) from None
-        except (OSError, ValueError, KeyError, TypeError):
-            raise UserError(REJECTED, 401) from None
-        finally:
-            self.close()
-
-    def close(self):
-        if self.process.poll() is None:
-            self.process.kill()
-        self.process.wait()
-        self.process.stdin.close()
-        self.process.stdout.close()
+def prepare_authorization(command, cwd):
+    if not command:
+        raise UserError(UNAVAILABLE, 503)
+    try:
+        result = subprocess.run(
+            [*command, "--authorize"], cwd=cwd, stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=12, check=True,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        if len(result.stdout) > MAX_PACKET:
+            raise ValueError
+        packet = json.loads(result.stdout)
+        url = google_authorization_url(packet["url"])
+        client_id, client_secret, verifier = packet["client_id"], packet["client_secret"], packet["verifier"]
+        params = dict(parse_qsl(urlsplit(url).query))
+        if (
+            not isinstance(client_id, str) or len(client_id) > 512
+            or not client_id.endswith(".apps.googleusercontent.com") or params.get("client_id") != client_id
+            or not isinstance(client_secret, str) or len(client_secret) > 512
+            or not isinstance(verifier, str) or not re.fullmatch(r"[A-Za-z0-9._~-]{43,128}", verifier)
+            or params.get("redirect_uri") != CLI_REDIRECT or params.get("code_challenge_method") != "S256"
+        ):
+            raise ValueError
+        return url, {"client_id": client_id, "client_secret": client_secret}, verifier
+    except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError, AttributeError):
+        raise UserError(UNAVAILABLE, 503) from None
 
 
 def run_authorization():
-    # Invoke the upstream CLI's flow without loading or touching its shared token store.
-    # Its URL prompt and one-time code travel only through this child's private pipes.
+    # Exit after generating the challenge. The App exchanges the code through
+    # its usual OAuth transport, without keeping a worker or its pipes open.
     from colab_cli import auth
 
-    def report_url(message, **_options):
-        url = message.strip()
-        if url.startswith("https://"):
-            print(json.dumps({"url": url}), flush=True)
-
-    def read_code(_prompt):
-        code = read_line(sys.stdin, MAX_CODE + 2, LIFETIME).strip()
-        if not 0 < len(code) <= MAX_CODE:
-            raise ValueError
-        return code
-
-    logging.disable(logging.CRITICAL)
-    # Google supports granting a subset of the CLI scopes. The app validates
-    # the email and Colab grants before binding this profile.
-    os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
-    auth.typer = SimpleNamespace(echo=report_url)
-    auth.input = read_code
     config = json.loads(files("colab_cli").joinpath("oauth_config.json").read_text(encoding="utf-8"))
-    credentials = auth._run_remote_flow(config)
-    expiry = credentials.expiry
-    if expiry.tzinfo is None:
-        expiry = expiry.replace(tzinfo=timezone.utc)
+    flow = auth.InstalledAppFlow.from_client_config(config, auth.PUBLIC_SCOPES, autogenerate_code_verifier=True)
+    flow.redirect_uri = auth.REMOTE_REDIRECT_URI
+    url, _ = flow.authorization_url(prompt="consent select_account", token_usage="remote")
     print(json.dumps({
-        "token": {
-            "access_token": credentials.token,
-            "refresh_token": credentials.refresh_token,
-            "expires_in": (expiry - datetime.now(timezone.utc)).total_seconds(),
-            "scope": " ".join(credentials.granted_scopes or credentials.scopes),
-        },
-        "client": {"client_id": credentials.client_id, "client_secret": credentials.client_secret},
+        "url": url,
+        "client_id": flow.client_config["client_id"],
+        "client_secret": flow.client_config.get("client_secret", ""),
+        "verifier": flow.code_verifier,
     }), flush=True)

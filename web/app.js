@@ -360,6 +360,19 @@ function disconnectAccount(profile) {
   }, "danger");
 }
 
+function showAuthorizationRetry(id) {
+  clearTimeout(oauthWatch);
+  dialogSubmit = null;
+  const code = dialogContent.querySelector("[name=code]");
+  code?.closest("label").remove();
+  dialogContent.querySelector("[type=submit]")?.remove();
+  const actions = dialogContent.querySelector("[data-oauth-actions]");
+  if (actions) {
+    const label = code ? t("重新获取授权码", "Get a new code") : t("重新授权", "Authorize again");
+    actions.innerHTML = button(label, "connect-account", "compact", id);
+  }
+}
+
 function watchConnection(id) {
   clearTimeout(oauthWatch);
   const authorization = activeAuthorization;
@@ -379,10 +392,7 @@ function watchConnection(id) {
         }
         if (profile?.auth_status !== "connecting") {
           showAuthProblem(serviceText(profile?.auth_error) || t("授权未完成。请重新连接 Google。", "Authorization is incomplete. Connect to Google again."));
-          const actions = dialogContent.querySelector("[data-oauth-actions]");
-          if (actions) actions.innerHTML = button(t("重新授权", "Authorize again"), "connect-account", "compact", id);
-          const submit = dialogContent.querySelector("[type=submit]");
-          if (submit) submit.disabled = true;
+          showAuthorizationRetry(id);
           return;
         }
       } catch {
@@ -406,7 +416,7 @@ async function openAccountAuthorization(profile, path = "") {
   const opened = await desktop?.openGoogleAuthorization?.postMessage(url.href).catch(() => false);
   const usesCode = result.flow === "cli";
   const instruction = usesCode
-    ? t("在浏览器选择上方账号并同意授权，然后把 Google 页面显示的授权码粘贴到这里。", "Choose the account shown above and approve access in your browser. Paste the code Google displays here.")
+    ? t("在浏览器同意授权后，把 Google 显示的授权码粘贴到这里，再点“完成连接”。", "Approve access in your browser, paste the code Google displays, then choose Connect account.")
     : t("在浏览器选择上方账号并同意授权。完成后，这里会自动更新。", "Choose the account shown above and approve access in your browser. The app will update automatically.");
   const context = `<div data-oauth-wait>${contextRows([[t("Google 邮箱", "Google email"), profile.email]])}</div>`;
   const links = `<div class="actions" data-oauth-actions>${externalLink(opened ? t("重新打开 Google 页面", "Reopen Google") : t("打开 Google 授权页", "Open Google authorization"), url.href, opened ? "text compact" : "compact")}</div>`;
@@ -415,8 +425,18 @@ async function openAccountAuthorization(profile, path = "") {
     setDialog(title, `${context}<p class="panel-note">${instruction}</p>
       <label class="field">${t("Google 授权码", "Google authorization code")}
         <input name="code" type="password" autocomplete="off" maxlength="4096" required></label>
+      <p class="panel-note" data-oauth-progress role="status" hidden>${t("正在向 Google 核对授权码…", "Checking the code with Google…")}</p>
       ${links}`, t("完成连接", "Connect account"), async fields => {
-      await change(accountPath(profile, "/connect/code"), { attempt: result.attempt, code: fields.get("code").trim() });
+      const progress = dialogContent.querySelector("[data-oauth-progress]");
+      progress.hidden = false;
+      try {
+        await change(accountPath(profile, "/connect/code"), { attempt: result.attempt, code: fields.get("code").trim() });
+      } catch (error) {
+        if (error.status !== 400) showAuthorizationRetry(profile.id);
+        throw error;
+      } finally {
+        progress.hidden = true;
+      }
       activeAuthorization = null;
       announce(t("Google 账号已连接。", "Google account connected."));
     });
@@ -434,7 +454,8 @@ async function connectAccount(profile) {
     await openAccountAuthorization(profile);
     announce("");
   } catch (error) {
-    announce(error.message, true);
+    if (dialog.open && dialogContent.querySelector("[data-oauth-wait]")) showAuthProblem(error.message);
+    else announce(error.message, true);
   } finally {
     busy = false;
     render();
