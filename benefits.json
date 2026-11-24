@@ -9,7 +9,7 @@
     "claim_url": "https://me.developers.google.com/benefits",
     "verification_url": "https://console.cloud.google.com/billing",
     "source_url": "https://developers.google.com/profile/help/benefits?hl=en",
-    "checked_on": "2026-11-20",
+    "checked_on": "2026-11-24",
     "steps": [
       "用当前选中的订阅账号进入权益页，打开 Google Cloud credits 卡片。",
       "选择要接收抵用金的结算账号，核对账号名称，再点 Apply。",
@@ -42,6 +42,40 @@
     "independent": true
   },
   {
+    "id": "google-skills-credits",
+    "title": "Google Skills 学习点",
+    "provider": "Google Developer Program",
+    "summary": "合资格开发者每月可得 35 个 Google Skills 学习点，用于平台上的实操实验。",
+    "eligibility": "Google Developer Program 免费标准档可申请。需要有开发者资料，并加入 Google Cloud Innovators 或符合条件的 GEAR 计划。",
+    "action_label": "查看可加入的计划",
+    "claim_url": "https://developers.google.com/profile/u/me/my-community",
+    "verification_url": "https://www.skills.google/",
+    "source_url": "https://developers.google.com/profile/help/benefits?hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "登录 Google Developer Program，打开 My Communities & Programs，加入 Google Cloud Innovators。",
+      "使用同一个 Google 账号登录 Google Skills，查看学习点余额。"
+    ],
+    "independent": true
+  },
+  {
+    "id": "developer-lab-credits",
+    "title": "开发者实验与活动试用点",
+    "provider": "Google Developer Program",
+    "summary": "符合条件的 Codelabs 实验和开发者活动可发放小额试用点，用来体验指定服务。",
+    "eligibility": "需使用个人 Gmail 账号和有效的开发者资料。每项合资格活动限领一次，受开放时间、名额和完成进度限制。",
+    "action_label": "查看 Google Codelabs",
+    "claim_url": "https://codelabs.developers.google.com/",
+    "verification_url": "https://me.developers.google.com/benefits",
+    "source_url": "https://developers.google.com/profile/help/benefits?hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "使用已加入 Google Developer Program 的个人账号打开对应实验或活动，查看试用点入口。",
+      "在活动时限内按页面指引领取，在该活动或开发者福利页核对状态。"
+    ],
+    "independent": true
+  },
+  {
     "id": "colab-cu",
     "title": "Colab 算力单位",
     "provider": "Google Colab",
@@ -51,7 +85,7 @@
     "claim_url": "https://colab.research.google.com/",
     "verification_url": "https://colab.research.google.com/",
     "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
-    "checked_on": "2026-11-20",
+    "checked_on": "2026-11-24",
     "steps": [
       "用订阅的 Google 账号打开 Colab，核对登录邮箱。",
       "在谷歌管理器连接该账号并刷新，查看实时 CU、费率和正在运行的实例。"
@@ -62,6 +96,53 @@
       "pro": "200",
       "ultra-5x": "1,000",
       "ultra-20x": "2,000"
+    }
+  },
+  {
+    "id": "youtube",
+    "title": "YouTube 会员",
+    "provider": "Google One",
+    "summary": "Pro 包含 Premium Lite 个人版。两档 Ultra 包含 Premium 家庭版，可使用 YouTube Music Premium。",
+    "eligibility": "限支持地区。Pro 福利仅限合资格的付费方案管理员。Ultra 由家庭管理员购买后，可分享给最多 5 位同住家庭成员。",
+    "action_label": "查看 YouTube 福利",
+    "claim_url": "https://one.google.com/benefits",
+    "verification_url": "https://www.youtube.com/paid_memberships",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "用订阅账号打开 Google One 福利页，查看 YouTube 会员档位。",
+      "Pro 的 Lite 符合条件时自动生效。免费试用转为付费后才会核对资格，已单独购买 YouTube 会员的账号需先查看当前订阅。",
+      "Ultra 家庭管理员可查看家庭组共享状态。最后在 YouTube 的购买内容与会员资格页面核对实际生效的档位。",
+      "部分地区的 Pro 会员可折扣加购完整版 YouTube Premium。价格和申请入口在 Google One 福利页核对。"
+    ],
+    "comparison": "YouTube 会员",
+    "plan_values": {
+      "pro": "Premium Lite 个人版",
+      "ultra-5x": "Premium 家庭版",
+      "ultra-20x": "Premium 家庭版"
+    }
+  },
+  {
+    "id": "google-store-rewards",
+    "title": "Google Store 购物金",
+    "provider": "Google Store",
+    "summary": "购买合资格的 Google Store 硬件与配件返 10% 购物金，可用于后续购物。",
+    "eligibility": "适用于美国、加拿大、英国、德国和澳大利亚的合资格付费套餐管理员。免费试用和家庭共享成员无此项。",
+    "action_label": "打开 Google Store",
+    "claim_url": "https://store.google.com/",
+    "verification_url": "https://store.google.com/account",
+    "source_url": "https://support.google.com/googleone/answer/9003266?hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "用购买 Google One 套餐的账号登录 Google Store，结账时查看预计返还的购物金。",
+      "订单发货后到 Google Store 账号页核对余额。发放时需保持套餐管理员资格。"
+    ],
+    "comparison": "Google Store 购物金",
+    "plan_unit": "购物金",
+    "plan_values": {
+      "pro": "10%",
+      "ultra-5x": "10%",
+      "ultra-20x": "10%"
     }
   },
   {
@@ -110,7 +191,7 @@
     "claim_url": "https://labs.google/fx/tools/flow",
     "verification_url": "https://one.google.com/ai/credits",
     "source_url": "https://support.google.com/flow/answer/16526234?co=GENIE.Platform%3DDesktop&hl=en-0",
-    "checked_on": "2026-11-20",
+    "checked_on": "2026-11-24",
     "steps": [
       "用当前账号进入 Flow，确认方案和剩余用量。",
       "在 Google One 的 AI 积分页核对余额和用量记录。"
@@ -138,6 +219,26 @@
     }
   },
   {
+    "id": "flow-4k-upscaling",
+    "title": "Flow 4K 超分辨率",
+    "provider": "Google Flow",
+    "summary": "两档 Ultra 可将支持的图片和视频放大到 4K。Pro 的视频放大最高支持 1080p。",
+    "eligibility": "图片与视频按各自的额度结算。以 Flow 里的模型选项和确认消耗为准。",
+    "action_label": "打开 Flow",
+    "claim_url": "https://labs.google/fx/tools/flow",
+    "verification_url": "https://labs.google/fx/tools/flow",
+    "source_url": "https://support.google.com/flow/answer/16526234?hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "在 Flow 用 Ultra 订阅账号打开作品，选择下载或放大时检查 4K 选项。",
+      "先核对该模型的可用分辨率和预计点数。以 Gemini Omni Flash 为例，1 至 10 秒视频放大到 4K 需 50 点。"
+    ],
+    "plan_values": {
+      "ultra-5x": "4K",
+      "ultra-20x": "4K"
+    }
+  },
+  {
     "id": "flow-music",
     "title": "Flow Music",
     "provider": "Google Flow Music",
@@ -147,7 +248,7 @@
     "claim_url": "https://www.flowmusic.app/",
     "verification_url": "https://www.flowmusic.app/",
     "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
-    "checked_on": "2026-11-20",
+    "checked_on": "2026-11-24",
     "steps": [
       "在 Flow Music 选择通过 Google 继续，核对邮箱。",
       "在 Google 授权页核对所请求的会员信息权限，完成后查看音乐点数。"
@@ -170,9 +271,10 @@
     "claim_url": "https://one.google.com/storage",
     "verification_url": "https://one.google.com/storage",
     "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
-    "checked_on": "2026-11-20",
+    "checked_on": "2026-11-24",
     "steps": [
-      "核对 Google One 右上角账号，再看总容量与已用容量。"
+      "核对 Google One 右上角账号，再看总容量与已用容量。",
+      "可在 Google One 查看存储管理工具。支持的移动设备可以通过 Google One 设置设备备份。"
     ],
     "comparison": "Google One 云存储",
     "plan_unit": "TB",
@@ -194,12 +296,34 @@
     "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
     "checked_on": "2026-11-20",
     "steps": [
-      "切到对应账号，查看 Gemini 的模型与功能列表。"
+      "切到对应账号，查看 Gemini 的模型与功能列表。",
+      "可在 Gemini 检查 Deep Research、Gemini Live、视频与音乐生成的可用入口，以及个人账号的模型权限和用量。Daily Brief 目前限美国。"
     ],
     "plan_values": {
       "pro": "Pro 基础额度",
       "ultra-5x": "5× Pro",
       "ultra-20x": "20× Pro"
+    }
+  },
+  {
+    "id": "gemini-tasks",
+    "title": "Gemini 任务",
+    "provider": "Gemini",
+    "summary": "可给 Gemini 分派多步骤任务或安排定时任务。会员档位决定可用额度。",
+    "eligibility": "需年满 18 岁，使用个人账号并开启 Gemini 历史记录。澳大利亚、加拿大、印度、日本、韩国、美国也向免费账号开放。其他支持地区需 Pro 或 Ultra，欧洲经济区、尼日利亚、瑞士和英国目前未开放。",
+    "action_label": "打开 Gemini 任务",
+    "claim_url": "https://gemini.google.com/",
+    "verification_url": "https://gemini.google.com/",
+    "source_url": "https://support.google.com/gemini/answer/17094507?hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "在 Gemini 网页、Mac App 或手机 App 登录对应账号，查看任务入口和使用额度。",
+      "在 Gemini 的任务对话中查看进度和排程。"
+    ],
+    "plan_values": {
+      "pro": "扩展额度",
+      "ultra-5x": "更高额度",
+      "ultra-20x": "最高额度"
     }
   },
   {
@@ -207,42 +331,23 @@
     "title": "Gemini Notebook",
     "provider": "Google",
     "summary": "原 NotebookLM。订阅增加研究、聊天和生成内容的用量。",
-    "eligibility": "用量随输入和输出变化。在设置的使用情况里查看刷新时间与周限额。",
+    "eligibility": "表中是每本笔记本可添加的资料来源数，不含笔记。聊天、音频和视频概览各有用量限制。",
     "action_label": "打开 Gemini Notebook",
     "claim_url": "https://notebooklm.google.com/",
     "verification_url": "https://one.google.com/benefits",
-    "source_url": "https://support.google.com/gemininotebook/answer/17670842?hl=en",
-    "checked_on": "2026-11-20",
+    "source_url": "https://support.google.com/gemininotebook/answer/16213268?hl=en",
+    "checked_on": "2026-11-24",
     "steps": [
       "在 Gemini Notebook 确认登录邮箱。",
       "打开设置中的使用情况，核对实际分配和剩余额度。"
     ],
     "plan_values": {
-      "pro": "Pro 基础额度",
-      "ultra-5x": "5× Pro",
-      "ultra-20x": "20× Pro"
-    }
-  },
-  {
-    "id": "youtube",
-    "title": "YouTube 会员",
-    "provider": "Google One",
-    "summary": "符合资格的付费 Pro 随方案提供 Premium Lite，Ultra 随方案提供 Premium 家庭版。",
-    "eligibility": "地区、试用状态和已有订阅会影响资格。Pro 的 Lite 随合资格方案自动生效，由方案管理员使用。",
-    "action_label": "在 Google 查看权益",
-    "claim_url": "https://one.google.com/benefits",
-    "verification_url": "https://www.youtube.com/paid_memberships",
-    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
-    "checked_on": "2026-11-20",
-    "steps": [
-      "在 Google One 福利页核对账号看到的 YouTube 档位和提示。",
-      "在 YouTube 的购买内容与会员资格页面确认已开通的档位。"
-    ],
-    "plan_values": {
-      "pro": "Premium Lite 个人版",
-      "ultra-5x": "Premium 家庭版",
-      "ultra-20x": "Premium 家庭版"
-    }
+      "pro": "300",
+      "ultra-5x": "500",
+      "ultra-20x": "600"
+    },
+    "comparison": "Gemini Notebook 资料来源",
+    "plan_unit": "份/本"
   },
   {
     "id": "family",
@@ -264,6 +369,43 @@
       "ultra-5x": "最多共享给 5 人",
       "ultra-20x": "最多共享给 5 人"
     }
+  },
+  {
+    "id": "google-one-support",
+    "title": "Google One 会员客服",
+    "provider": "Google One",
+    "summary": "可就会员、账单、Google One 功能和存储问题联系 Google 会员客服。",
+    "eligibility": "聊天、电话与电子邮件等联系方式按账号和所在地区显示。",
+    "action_label": "打开会员客服",
+    "claim_url": "https://one.google.com/support",
+    "verification_url": "https://one.google.com/support",
+    "source_url": "https://support.google.com/googleone/answer/9003266?hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "用订阅账号打开 Google One 帮助页，选择联系支持并查看可用渠道。"
+    ],
+    "plan_values": {
+      "pro": "可使用",
+      "ultra-5x": "可使用",
+      "ultra-20x": "可使用"
+    }
+  },
+  {
+    "id": "google-one-member-offers",
+    "title": "账号专属与限时优惠",
+    "provider": "Google One",
+    "summary": "Google 有时会在福利页向符合条件的会员发放专属活动。这里可以直接查看当前账号的优惠。",
+    "eligibility": "领取条件取决于账单地区、套餐状态和活动时限。部分活动只发给套餐管理员，或全家限领一次。",
+    "action_label": "查看当前账号福利",
+    "claim_url": "https://one.google.com/benefits",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://support.google.com/googleone/answer/9003266?hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "在 Google One 福利页查看该账号的可领取项目和各自的条款。",
+      "在福利记录中查看已领取的项目。"
+    ],
+    "independent": true
   },
   {
     "id": "home",
@@ -303,6 +445,365 @@
       "pro": "健康高级会员",
       "ultra-5x": "健康高级会员",
       "ultra-20x": "健康高级会员"
+    }
+  },
+  {
+    "id": "ai-studio",
+    "title": "Google AI Studio 网页额度",
+    "provider": "Google AI Studio",
+    "summary": "在 AI Studio 使用更高的网页版模型、应用原型和图片生成额度。",
+    "eligibility": "限支持地区及年满 18 岁的账号。Gemini API 用量按所选项目的计费设置结算。",
+    "action_label": "打开 AI Studio",
+    "claim_url": "https://aistudio.google.com/",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "用订阅账号打开 AI Studio，核对模型选择器和当前额度。"
+    ],
+    "plan_values": {
+      "pro": "扩展额度",
+      "ultra-5x": "更高额度",
+      "ultra-20x": "最高额度"
+    }
+  },
+  {
+    "id": "search-ai-mode",
+    "title": "Google 搜索 AI 模式",
+    "provider": "Google Search",
+    "summary": "按套餐扩大 AI 模式的模型与图像功能用量。",
+    "eligibility": "模型和功能因地区而异。AI 模式的代理功能仅限美国。",
+    "action_label": "打开搜索 AI 模式",
+    "claim_url": "https://www.google.com/aimode",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "用订阅账号进入 AI 模式，查看可选模型与功能。",
+      "在美国以英语使用 Google 搜索时，可查看本地商家结果有无“让 AI 查询价格”入口，委托 Google 询问价格与可用时间。"
+    ],
+    "plan_values": {
+      "pro": "扩展额度",
+      "ultra-5x": "更高额度",
+      "ultra-20x": "最高额度"
+    }
+  },
+  {
+    "id": "gemini-google-apps",
+    "title": "Gmail、文档与 Vids 中的 Gemini",
+    "provider": "Google",
+    "summary": "可在 Gmail、Google 文档、表格和 Vids 等应用中使用 Gemini 写作、总结或制作内容。",
+    "eligibility": "个人 Google AI 方案。功能受语言、地区、年龄和应用版本影响。",
+    "action_label": "打开 Google 文档",
+    "claim_url": "https://docs.google.com/",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "在对应产品中登录订阅账号，查看右上角的 Gemini 入口。"
+    ],
+    "plan_values": {
+      "pro": "可使用",
+      "ultra-5x": "可使用",
+      "ultra-20x": "可使用"
+    }
+  },
+  {
+    "id": "google-pics",
+    "title": "Google Pics",
+    "provider": "Google Workspace",
+    "summary": "在画布上用文字提示或参考图生成与编辑图片，也能从 Drive 和 Google 相册导入素材。",
+    "eligibility": "Pro 和两档 Ultra 均可在支持的电脑浏览器使用。德国个人账号暂不支持，部分编辑功能有语言限制。",
+    "action_label": "打开 Google Pics",
+    "claim_url": "https://docs.google.com/images/create?usp=hc",
+    "verification_url": "https://docs.google.com/images/create?usp=hc",
+    "source_url": "https://support.google.com/docs/answer/17256710?hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "在电脑浏览器登录订阅账号，打开 Google Pics 查看生成和编辑工具。"
+    ],
+    "plan_values": {
+      "pro": "可使用",
+      "ultra-5x": "可使用",
+      "ultra-20x": "可使用"
+    }
+  },
+  {
+    "id": "workspace-live",
+    "title": "Gmail、文档与 Keep 的 Live",
+    "provider": "Google Workspace",
+    "summary": "在 Gmail、Google 文档和 Keep 中与 Gemini 实时语音对话。",
+    "eligibility": "目前仅限美国。Gmail Live 和 Docs Live 支持 iOS、Android，Keep Live 支持 iOS。",
+    "action_label": "查看会员福利",
+    "claim_url": "https://one.google.com/benefits",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "在支持的手机应用中切换到订阅账号，查看 Live 入口。"
+    ],
+    "plan_values": {
+      "pro": "可使用",
+      "ultra-5x": "可使用",
+      "ultra-20x": "可使用"
+    }
+  },
+  {
+    "id": "gmail-ai-inbox",
+    "title": "Gmail AI Inbox",
+    "provider": "Gmail",
+    "summary": "在 Gmail 汇总待办和重点话题。",
+    "eligibility": "仅限美国与英文界面，需要开启 Workspace 智能功能。",
+    "action_label": "打开 Gmail",
+    "claim_url": "https://mail.google.com/",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://support.google.com/mail/answer/16845247?hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "用合资格账号打开电脑端 Gmail，在侧栏查看 AI Inbox。"
+    ],
+    "plan_values": {
+      "pro": "可使用",
+      "ultra-5x": "可使用",
+      "ultra-20x": "可使用"
+    }
+  },
+  {
+    "id": "android-studio",
+    "title": "Android Studio 的 Gemini",
+    "provider": "Android Studio",
+    "summary": "为 Android Studio 中的 Gemini 高级模型和代码代理提供更高用量。",
+    "eligibility": "需使用支持 Gemini 的 Android Studio 版本，并登录合资格的订阅账号。",
+    "action_label": "查看 Android Studio 入口",
+    "claim_url": "https://developer.android.com/studio/gemini/overview",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://developer.android.com/studio/gemini/feature-comparison",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "在 Android Studio 用订阅账号登录，打开 Gemini 核对模型和用量。"
+    ],
+    "plan_values": {
+      "pro": "扩展额度",
+      "ultra-5x": "更高额度",
+      "ultra-20x": "最高额度"
+    }
+  },
+  {
+    "id": "photos-creative",
+    "title": "Google 相册创作额度",
+    "provider": "Google Photos",
+    "summary": "Google 相册的 Remix 与 Veo 照片转视频功能按档位提供更多生成次数。",
+    "eligibility": "本套餐页列出的创作加量仅限美国。功能需在支持的 Google 相册 App 中查看。",
+    "action_label": "查看 Google 相册",
+    "claim_url": "https://www.google.com/photos/about/",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "在相册 App 登录同一个订阅账号，在创作入口查看 Remix 或照片转视频。"
+    ],
+    "plan_values": {
+      "pro": "扩展额度",
+      "ultra-5x": "更高额度",
+      "ultra-20x": "最高额度"
+    }
+  },
+  {
+    "id": "earth-gemini",
+    "title": "Google Earth 的 Gemini",
+    "provider": "Google Earth",
+    "summary": "在 Google Earth 网页版用 Gemini 辅助地点查询、边界查看和地图分析。",
+    "eligibility": "目前仅限美国网页端。需超过 Google 所要求的适用年龄。公开资料未给出两档 Ultra 各自的具体用量。",
+    "action_label": "打开 Google Earth",
+    "claim_url": "https://earth.google.com/web/",
+    "verification_url": "https://earth.google.com/web/",
+    "source_url": "https://support.google.com/googleone/answer/14534406?hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "在 Google Earth 网页版登录订阅账号，查看 Gemini 地理分析入口。"
+    ],
+    "plan_values": {
+      "pro": "扩展额度",
+      "ultra-5x": "更高额度",
+      "ultra-20x": "更高额度"
+    }
+  },
+  {
+    "id": "dreambeans",
+    "title": "Dreambeans",
+    "provider": "Google Labs",
+    "summary": "Google Labs 的试验功能。经用户授权后，可结合日历和相册等信息生成每日故事。",
+    "eligibility": "限美国，18 岁及以上，Android 或 iOS，目前支持英语。Google One 的 Pro 说明也列有此功能，Dreambeans 当前加入指引要求 Ultra 并登记候补。",
+    "action_label": "查看候补资格",
+    "claim_url": "https://support.google.com/labs/answer/17070161?hl=en",
+    "verification_url": "https://support.google.com/labs/answer/17070161?hl=en",
+    "source_url": "https://support.google.com/googleone/answer/14534406?hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "查看 Dreambeans 当前加入条件，再从官方说明打开候补表单。"
+    ],
+    "plan_values": {
+      "ultra-5x": "候补开放",
+      "ultra-20x": "候补开放"
+    }
+  },
+  {
+    "id": "google-tv-create-hub",
+    "title": "Google TV Create Hub",
+    "provider": "Google TV",
+    "summary": "支持的 Google TV 可用 AI 生成图片和视频。三档会员均有扩展用量。",
+    "eligibility": "限美国，18 岁及以上，需使用支持 Gemini 的 TCL Google TV 设备。",
+    "action_label": "查看电视使用条件",
+    "claim_url": "https://support.google.com/googleone/answer/14534406?hl=en#use-google-tv-create-hub",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://support.google.com/googleone/answer/16286513?hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "在支持的电视上登录订阅账号，打开 Create Hub，按屏幕提示查看可用模式与额度。"
+    ],
+    "plan_values": {
+      "pro": "扩展额度",
+      "ultra-5x": "扩展额度",
+      "ultra-20x": "扩展额度"
+    }
+  },
+  {
+    "id": "project-genie",
+    "title": "Project Genie",
+    "provider": "Google Labs",
+    "summary": "从文字或图像生成并探索可交互的世界。",
+    "eligibility": "仅 Ultra 20x。需年满 18 岁，适用地区以 Google 为准。",
+    "action_label": "打开 Project Genie",
+    "claim_url": "https://labs.google/projectgenie/",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "用 Ultra 20x 订阅账号打开 Google Labs，核对项目入口是否可用。"
+    ],
+    "comparison": "Project Genie",
+    "plan_values": {
+      "ultra-20x": "可使用"
+    }
+  },
+  {
+    "id": "hypothesis-generation",
+    "title": "Hypothesis Generation",
+    "provider": "Google",
+    "summary": "Google 将研究假设生成功能列为 Ultra 权益，开放状态由账号决定。",
+    "eligibility": "须年满 18 岁。Google 的公开说明未列出 5x 与 20x 的差异。",
+    "action_label": "核对账号资格",
+    "claim_url": "https://one.google.com/benefits",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://support.google.com/googleone/answer/16476748?hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "用 Ultra 订阅账号打开 Google One 福利页，查看是否已开放。"
+    ],
+    "plan_values": {
+      "ultra-5x": "核对账号",
+      "ultra-20x": "核对账号"
+    }
+  },
+  {
+    "id": "meet-premium",
+    "title": "Google Meet 高级会议",
+    "provider": "Google Meet",
+    "summary": "符合资格的方案支持最多 100 人、最长 24 小时的群组视频通话。",
+    "eligibility": "由符合资格的个人账号主持。录制、降噪等功能以会议内实际显示为准。",
+    "action_label": "打开 Google Meet",
+    "claim_url": "https://meet.google.com/",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://support.google.com/meet/answer/14754931",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "用订阅账号创建会议，查看主持人可用的录制和会议设置。",
+      "合资格的 Pro 和 Ultra 账号也可用 Gemini 记录会议笔记。地区与语言要求见 Google Meet 帮助。"
+    ],
+    "plan_values": {
+      "pro": "可使用",
+      "ultra-5x": "可使用",
+      "ultra-20x": "可使用"
+    }
+  },
+  {
+    "id": "calendar-booking",
+    "title": "Google 日历高级预约",
+    "provider": "Google Calendar",
+    "summary": "可创建多个预约日程，并使用预约提醒等高级设置。",
+    "eligibility": "用符合资格的个人账号在电脑端设置，选项以 Google 日历实际显示为准。",
+    "action_label": "打开 Google 日历",
+    "claim_url": "https://calendar.google.com/",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://support.google.com/googleone/answer/12351029?hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "在 Google 日历选择“创建”，再打开“预约日程”查看设置。"
+    ],
+    "plan_values": {
+      "pro": "可使用",
+      "ultra-5x": "可使用",
+      "ultra-20x": "可使用"
+    }
+  },
+  {
+    "id": "finance-deep-search",
+    "title": "Google Finance 深度搜索",
+    "provider": "Google Finance",
+    "summary": "Google Finance 的 Deep Search 按会员档位增加查询用量。",
+    "eligibility": "目前仅限美国。",
+    "action_label": "打开 Google Finance",
+    "claim_url": "https://www.google.com/finance/",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "用订阅账号在 Google Finance 查看 Deep Search 入口。"
+    ],
+    "plan_values": {
+      "pro": "扩展额度",
+      "ultra-5x": "更高额度",
+      "ultra-20x": "最高额度"
+    }
+  },
+  {
+    "id": "chrome-auto-browse",
+    "title": "Chrome 自动浏览",
+    "provider": "Google Chrome",
+    "summary": "在支持的 Chrome 中使用 Gemini 自动浏览功能，会员档位决定用量。",
+    "eligibility": "限美国和印度。年龄、系统和 Chrome 版本要求见官方说明。",
+    "action_label": "查看 Chrome 开启方法",
+    "claim_url": "https://support.google.com/chrome/answer/16821166?hl=en",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "在合资格账号的 Chrome 中打开 Gemini，核对是否出现自动浏览选项。"
+    ],
+    "plan_values": {
+      "pro": "扩展额度",
+      "ultra-5x": "更高额度",
+      "ultra-20x": "最高额度"
+    }
+  },
+  {
+    "id": "playground",
+    "title": "Google Playground",
+    "provider": "Google",
+    "summary": "用 AI 创建和试玩自定义游戏，生成次数随档位变化。",
+    "eligibility": "Google 套餐页列为在美国和印度开放，具体资格以账号页面为准。",
+    "action_label": "打开 Playground",
+    "claim_url": "https://playground.google/",
+    "verification_url": "https://one.google.com/benefits",
+    "source_url": "https://one.google.com/intl/en/about/google-ai-plans/?gl=US&hl=en",
+    "checked_on": "2026-11-24",
+    "steps": [
+      "用订阅账号登录 Playground，查看生成入口和用量。"
+    ],
+    "plan_values": {
+      "pro": "扩展额度",
+      "ultra-5x": "更高额度",
+      "ultra-20x": "最高额度"
     }
   }
 ]

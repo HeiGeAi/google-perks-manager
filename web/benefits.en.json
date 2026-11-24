@@ -72,6 +72,20 @@
     "action_label": "Open Flow",
     "plan_values": {"ultra-20x": "0 credits on eligible modes"}
   },
+  "flow-4k-upscaling": {
+    "title": "4K upscaling in Flow",
+    "summary": "Both Ultra tiers can upscale supported images and videos to 4K. Pro video upscaling goes up to 1080p.",
+    "eligibility": "Image and video upscaling have separate limits. Check the options and cost for the model shown in Flow.",
+    "action_label": "Open Flow",
+    "steps": [
+      "Open your work in Flow with your Ultra account. Look for 4K in the download or upscale options.",
+      "Check the available resolution and credit cost for your model. For example, upscaling a 1 to 10 second Gemini Omni Flash video to 4K uses 50 credits."
+    ],
+    "plan_values": {
+      "ultra-5x": "4K",
+      "ultra-20x": "4K"
+    }
+  },
   "flow-music": {
     "title": "Flow Music",
     "summary": "The plan includes dedicated credits you can check in your Flow Music account.",
@@ -92,7 +106,8 @@
     "comparison": "Google One storage",
     "plan_values": {"pro": "5 or 10"},
     "steps": [
-      "Verify the account in Google One, then check its total and used storage."
+      "Verify the account in Google One, then check its total and used storage.",
+      "Open the storage manager in Google One. On a supported mobile device, you can set up device backup through Google One."
     ]
   },
   "gemini": {
@@ -100,31 +115,47 @@
     "summary": "Ultra increases Gemini usage allowances and gives access to more models than Pro.",
     "eligibility": "Usage multipliers use Pro as the baseline. Check the signed-in account for model, feature, and regional limits.",
     "action_label": "Open Gemini",
-    "plan_values": {"pro": "Pro baseline"},
+    "plan_values": {
+      "pro": "Pro baseline"
+    },
     "steps": [
-      "Switch to the subscription account and check the models and features available in Gemini."
+      "Switch to the subscription account and check the models and features available in Gemini.",
+      "In Gemini, check your account for Deep Research, Gemini Live, video and music generation, and available models and limits. Daily Brief is currently US only."
     ]
   },
   "notebook": {
     "title": "Gemini Notebook",
     "summary": "Formerly NotebookLM. Subscriptions increase the limits for research, chat, and generating content.",
-    "eligibility": "Usage depends on inputs and outputs. See usage in Settings for the refresh time and weekly limits.",
+    "eligibility": "The table shows the number of sources per notebook, excluding notes. Chat, audio and video overviews have separate limits.",
     "action_label": "Open Gemini Notebook",
-    "plan_values": {"pro": "Pro baseline"},
+    "plan_values": {
+      "pro": "300",
+      "ultra-5x": "500",
+      "ultra-20x": "600"
+    },
     "steps": [
       "Verify the email address signed in to Gemini Notebook.",
       "Open usage settings to check your allowance and remaining quota."
-    ]
+    ],
+    "comparison": "Gemini Notebook sources",
+    "plan_unit": "sources/notebook"
   },
   "youtube": {
     "title": "YouTube membership",
-    "summary": "Eligible paid Pro plans include Premium Lite. Eligible Ultra plans include Premium Family.",
-    "eligibility": "Region, trial status, and an existing subscription affect eligibility. Premium Lite activates automatically for eligible Pro plan managers.",
-    "action_label": "View perk on Google",
-    "plan_values": {"pro": "Premium Lite individual", "ultra-5x": "Premium Family", "ultra-20x": "Premium Family"},
+    "summary": "Eligible Pro includes Premium Lite for one person. Both eligible Ultra tiers include Premium Family with YouTube Music Premium.",
+    "eligibility": "Available in supported regions. Pro is for eligible paid plan managers. When the family manager buys Ultra, up to five other household members can share Premium.",
+    "action_label": "View YouTube benefit",
+    "comparison": "YouTube membership",
+    "plan_values": {
+      "pro": "Premium Lite individual",
+      "ultra-5x": "Premium Family",
+      "ultra-20x": "Premium Family"
+    },
     "steps": [
-      "On the Google One benefits page, check the YouTube plan and instructions shown for this account.",
-      "Confirm the active plan on YouTube's Purchases and memberships page."
+      "Check the YouTube membership tier on Google One benefits with the subscribed account.",
+      "Pro activates Lite automatically when eligible. Trials must convert to paid first. Check any existing standalone YouTube membership.",
+      "Ultra family managers can check sharing in their family group. Confirm the active tier in YouTube Purchases and memberships.",
+      "In some regions, Pro members can buy a discounted full YouTube Premium add-on. Check Google One benefits for the price and availability."
     ]
   },
   "family": {
@@ -155,6 +186,333 @@
     "plan_values": {"pro": "Premium membership", "ultra-5x": "Premium membership", "ultra-20x": "Premium membership"},
     "steps": [
       "Find Google Health Premium in Google One benefits and verify the account and device before completing activation."
+    ]
+  },
+  "ai-studio": {
+    "title": "Google AI Studio web allowances",
+    "summary": "Get more usage in the AI Studio web app for models, prototyping and image generation.",
+    "eligibility": "Requires an eligible region and age 18+. Gemini API usage follows the selected project's billing settings.",
+    "action_label": "Open AI Studio",
+    "steps": [
+      "Open AI Studio with the subscribed account to check its model picker and allowance."
+    ],
+    "plan_values": {
+      "pro": "Expanded",
+      "ultra-5x": "Higher",
+      "ultra-20x": "Highest"
+    }
+  },
+  "search-ai-mode": {
+    "title": "AI Mode in Google Search",
+    "summary": "Get higher limits for AI Mode models and image tools, depending on the plan.",
+    "eligibility": "Models and features vary by region. Agentic features in AI Mode are available in the US.",
+    "action_label": "Open AI Mode",
+    "steps": [
+      "Open AI Mode with the subscribed account to check the available models and features.",
+      "In the US, use Google Search in English to check for the Have AI check pricing option on local business results."
+    ],
+    "plan_values": {
+      "pro": "Expanded",
+      "ultra-5x": "Higher",
+      "ultra-20x": "Highest"
+    }
+  },
+  "gemini-google-apps": {
+    "title": "Gemini in Gmail, Docs and Vids",
+    "summary": "Use Gemini to write, summarize or create content in Gmail, Docs, Sheets, Vids and other Google apps.",
+    "eligibility": "For personal Google AI plans. Features vary by language, region, age and app version.",
+    "action_label": "Open Google Docs",
+    "steps": [
+      "Sign in to the relevant Google app with the subscribed account and look for its Gemini control."
+    ],
+    "plan_values": {
+      "pro": "Included",
+      "ultra-5x": "Included",
+      "ultra-20x": "Included"
+    }
+  },
+  "gmail-ai-inbox": {
+    "title": "Gmail AI Inbox",
+    "summary": "See a summary of to-dos and priority topics in Gmail.",
+    "eligibility": "Available in the US in English. Requires Workspace smart features.",
+    "action_label": "Open Gmail",
+    "steps": [
+      "Open Gmail on a computer with the eligible account and check the sidebar for AI Inbox."
+    ],
+    "plan_values": {
+      "pro": "Included",
+      "ultra-5x": "Included",
+      "ultra-20x": "Included"
+    }
+  },
+  "android-studio": {
+    "title": "Gemini in Android Studio",
+    "summary": "Get higher limits for advanced Gemini models and coding agents in Android Studio.",
+    "eligibility": "Requires a supported version of Android Studio and an eligible subscribed account.",
+    "action_label": "View Android Studio setup",
+    "steps": [
+      "Sign in to Android Studio with the subscribed account and check models and usage in Gemini."
+    ],
+    "plan_values": {
+      "pro": "Expanded",
+      "ultra-5x": "Higher",
+      "ultra-20x": "Highest"
+    }
+  },
+  "photos-creative": {
+    "title": "Google Photos creative allowances",
+    "summary": "Get more generations for Remix and Veo photo-to-video in Google Photos.",
+    "eligibility": "The added creative allowance on this plan page is for the US. Check availability in the supported Google Photos app.",
+    "action_label": "View Google Photos",
+    "steps": [
+      "Open Create in the Google Photos app with the subscribed account and look for Remix or photo-to-video."
+    ],
+    "plan_values": {
+      "pro": "Expanded",
+      "ultra-5x": "Higher",
+      "ultra-20x": "Highest"
+    }
+  },
+  "project-genie": {
+    "title": "Project Genie",
+    "summary": "Generate and explore interactive worlds from text or images.",
+    "eligibility": "Ultra 20x only. Requires age 18+ in a supported region.",
+    "action_label": "Open Project Genie",
+    "steps": [
+      "Open Google Labs with the Ultra 20x account to check access."
+    ],
+    "comparison": "Project Genie",
+    "plan_values": {
+      "ultra-20x": "Included"
+    }
+  },
+  "meet-premium": {
+    "title": "Google Meet premium features",
+    "summary": "Eligible plans include group video calls for up to 100 participants and up to 24 hours.",
+    "eligibility": "Host with an eligible personal account. Check the meeting controls for recording and noise cancellation.",
+    "action_label": "Open Google Meet",
+    "steps": [
+      "Create a meeting with the subscribed account and check which host settings are available.",
+      "Eligible Pro and Ultra accounts can also take meeting notes with Gemini. See Google Meet help for region and language requirements."
+    ],
+    "plan_values": {
+      "pro": "Included",
+      "ultra-5x": "Included",
+      "ultra-20x": "Included"
+    }
+  },
+  "calendar-booking": {
+    "title": "Google Calendar premium scheduling",
+    "summary": "Create multiple appointment schedules and use premium options such as booking reminders.",
+    "eligibility": "Set up schedules on a computer with an eligible personal account. See Google Calendar for available options.",
+    "action_label": "Open Google Calendar",
+    "steps": [
+      "In Google Calendar, select Create and then Appointment schedule to view the settings."
+    ],
+    "plan_values": {
+      "pro": "Included",
+      "ultra-5x": "Included",
+      "ultra-20x": "Included"
+    }
+  },
+  "finance-deep-search": {
+    "title": "Deep Search in Google Finance",
+    "summary": "Get more Deep Search queries in Google Finance according to the subscription tier.",
+    "eligibility": "Available in the US.",
+    "action_label": "Open Google Finance",
+    "steps": [
+      "Sign in to Google Finance with the subscribed account and look for Deep Search."
+    ],
+    "plan_values": {
+      "pro": "Expanded",
+      "ultra-5x": "Higher",
+      "ultra-20x": "Highest"
+    }
+  },
+  "chrome-auto-browse": {
+    "title": "Chrome auto browse",
+    "summary": "Use Gemini auto browse in supported versions of Chrome. Limits depend on the plan.",
+    "eligibility": "Available in the US and India. See Google Help for age, device and Chrome version requirements.",
+    "action_label": "View Chrome setup",
+    "steps": [
+      "Open Gemini in Chrome with the eligible account and check for the auto browse option."
+    ],
+    "plan_values": {
+      "pro": "Expanded",
+      "ultra-5x": "Higher",
+      "ultra-20x": "Highest"
+    }
+  },
+  "playground": {
+    "title": "Google Playground",
+    "summary": "Create and play custom games with AI. Generation limits depend on the plan.",
+    "eligibility": "Google's plan page lists availability in the US and India. Account eligibility is shown in Playground.",
+    "action_label": "Open Playground",
+    "steps": [
+      "Sign in to Playground with the subscribed account to check its generation tools and limits."
+    ],
+    "plan_values": {
+      "pro": "Expanded",
+      "ultra-5x": "Higher",
+      "ultra-20x": "Highest"
+    }
+  },
+  "google-store-rewards": {
+    "title": "Google Store rewards",
+    "summary": "Earn 10% back as Google Store credit on eligible hardware and accessories. Use the credit on a future purchase.",
+    "eligibility": "For eligible paid plan managers in the US, Canada, UK, Germany and Australia. Trials and family group members are excluded.",
+    "action_label": "Open Google Store",
+    "steps": [
+      "Sign in to Google Store with the account that pays for Google One. Check the expected credit at checkout.",
+      "Check your Google Store credit balance after the order ships. You must still be an eligible plan manager when the credit is issued."
+    ],
+    "comparison": "Google Store rewards",
+    "plan_unit": "store credit",
+    "plan_values": {
+      "pro": "10%",
+      "ultra-5x": "10%",
+      "ultra-20x": "10%"
+    }
+  },
+  "google-skills-credits": {
+    "title": "Google Skills learning credits",
+    "summary": "Eligible developers receive 35 Google Skills learning credits each month for hands-on labs.",
+    "eligibility": "Available with free Google Developer Program Standard membership. A developer profile and Google Cloud Innovators or eligible GEAR enrollment are required.",
+    "action_label": "View developer communities",
+    "steps": [
+      "Open My Communities & Programs in your Google Developer Program profile and join Google Cloud Innovators.",
+      "Sign in to Google Skills with the same Google account and check your learning credit balance."
+    ]
+  },
+  "developer-lab-credits": {
+    "title": "Developer codelab and event credits",
+    "summary": "Eligible codelabs and developer events can offer small credits to try the services featured in the activity.",
+    "eligibility": "Requires a personal Gmail account and an active developer profile. One claim per eligible activity, subject to timing, capacity and prior completions.",
+    "action_label": "Browse Google Codelabs",
+    "steps": [
+      "Open the participating lab or event with your personal Developer Program account and look for its credit offer.",
+      "Follow the activity instructions within its claim window. Check the activity or your developer benefits for status."
+    ]
+  },
+  "gemini-tasks": {
+    "title": "Tasks in Gemini",
+    "summary": "Assign multi-step tasks or schedule recurring work in Gemini. Usage limits vary by tier.",
+    "eligibility": "Ages 18+. Requires a personal account and Gemini History. Free accounts can use tasks in Australia, Canada, India, Japan, South Korea and the US. Other supported regions require Pro or Ultra. The EEA, Nigeria, Switzerland and the UK currently lack access.",
+    "action_label": "Open Gemini tasks",
+    "steps": [
+      "Sign in to Gemini on the web, Mac or mobile and check the tasks controls and available usage.",
+      "Check progress and schedules in the Gemini task conversation."
+    ],
+    "plan_values": {
+      "pro": "Expanded",
+      "ultra-5x": "Higher",
+      "ultra-20x": "Highest"
+    }
+  },
+  "google-pics": {
+    "title": "Google Pics",
+    "summary": "Generate and edit images on a canvas with prompts or visual references. Import assets from Drive and Google Photos.",
+    "eligibility": "Available on Pro and both Ultra tiers in supported desktop browsers. Personal accounts in Germany are excluded. Language restrictions apply to some editing tools.",
+    "action_label": "Open Google Pics",
+    "steps": [
+      "Open Google Pics in a desktop browser with the subscribed account and check its image generation and editing tools."
+    ],
+    "plan_values": {
+      "pro": "Available",
+      "ultra-5x": "Available",
+      "ultra-20x": "Available"
+    }
+  },
+  "workspace-live": {
+    "title": "Live in Gmail, Docs and Keep",
+    "summary": "Have a real-time voice conversation with Gemini in Gmail, Docs or Google Keep.",
+    "eligibility": "Currently US only. Gmail Live and Docs Live are on iOS and Android. Keep Live is on iOS.",
+    "action_label": "View member benefits",
+    "steps": [
+      "Switch to the subscribed account in a supported mobile app and look for Live."
+    ],
+    "plan_values": {
+      "pro": "Available",
+      "ultra-5x": "Available",
+      "ultra-20x": "Available"
+    }
+  },
+  "earth-gemini": {
+    "title": "Gemini in Google Earth",
+    "summary": "Use Gemini on Google Earth web to explore places, visualize boundaries and analyze maps.",
+    "eligibility": "Currently US web only. Google account age requirements apply. Separate usage limits for Ultra 5x and Ultra 20x are not published.",
+    "action_label": "Open Google Earth",
+    "steps": [
+      "Sign in to Google Earth on the web with your subscribed account and look for the Gemini analysis controls."
+    ],
+    "plan_values": {
+      "pro": "Expanded",
+      "ultra-5x": "Higher",
+      "ultra-20x": "Higher"
+    }
+  },
+  "dreambeans": {
+    "title": "Dreambeans",
+    "summary": "A Google Labs experiment that makes personalized daily stories using calendar and photo information you choose to connect.",
+    "eligibility": "US only, ages 18+, on Android or iOS, with English support. Google One lists it in Pro help as well. The current Dreambeans enrollment guide requires Ultra and joining the waitlist.",
+    "action_label": "Check waitlist eligibility",
+    "steps": [
+      "Check the current Dreambeans requirements and open the waitlist form from the official guide."
+    ],
+    "plan_values": {
+      "ultra-5x": "Waitlist",
+      "ultra-20x": "Waitlist"
+    }
+  },
+  "google-tv-create-hub": {
+    "title": "Google TV Create Hub",
+    "summary": "Generate AI images and videos on a compatible Google TV. All three tiers get higher limits.",
+    "eligibility": "US only, ages 18+, on Gemini-enabled TCL Google TV devices.",
+    "action_label": "View TV requirements",
+    "steps": [
+      "Sign in to a supported TV with your subscribed account. Open Create Hub and follow the on-screen controls to check modes and limits."
+    ],
+    "plan_values": {
+      "pro": "Expanded",
+      "ultra-5x": "Expanded",
+      "ultra-20x": "Expanded"
+    }
+  },
+  "hypothesis-generation": {
+    "title": "Hypothesis Generation",
+    "summary": "Google lists research hypothesis generation as an Ultra benefit. Availability depends on the account.",
+    "eligibility": "Ages 18+. Google does not publish a 5x versus 20x breakdown for this feature.",
+    "action_label": "Check account eligibility",
+    "steps": [
+      "Open Google One benefits with the Ultra subscriber account and check for availability."
+    ],
+    "plan_values": {
+      "ultra-5x": "Check account",
+      "ultra-20x": "Check account"
+    }
+  },
+  "google-one-support": {
+    "title": "Google One member support",
+    "summary": "Contact Google One support about your membership, billing, features or storage.",
+    "eligibility": "Available chat, phone and email options depend on your account and region.",
+    "action_label": "Open member support",
+    "steps": [
+      "Open Google One support with your subscribed account and choose a contact channel."
+    ],
+    "plan_values": {
+      "pro": "Available",
+      "ultra-5x": "Available",
+      "ultra-20x": "Available"
+    }
+  },
+  "google-one-member-offers": {
+    "title": "Account-specific and limited-time offers",
+    "summary": "Google may show targeted offers to eligible members on the benefits page. Open it to see what's available for your account.",
+    "eligibility": "Eligibility depends on billing region, subscription status and the offer window. Some offers are for the plan manager or limited to one claim per plan.",
+    "action_label": "View current account benefits",
+    "steps": [
+      "Open Google One benefits and read the terms of each offer shown for the account.",
+      "Review redeemed offers in your benefits history."
     ]
   }
 }

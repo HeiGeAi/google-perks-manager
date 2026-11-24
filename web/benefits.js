@@ -54,7 +54,7 @@ function planBadge(benefit) {
 
 function planValue(value, unit) {
   if (!value) return `<span class="quota-unavailable">${t("本档无此项", "Not included")}</span>`;
-  return '<strong>' + escapeHtml(value) + '</strong>' + (unit ? '<small>' + escapeHtml(unit) + '</small>' : '');
+  return '<strong>' + escapeHtml(value) + '</strong>' + (unit ? '<wbr><small>' + escapeHtml(unit) + '</small>' : '');
 }
 
 function renderPlanComparison(catalog, filter) {
@@ -70,14 +70,14 @@ function renderPlanComparison(catalog, filter) {
       planValue(item.plan_values[key], item.plan_unit) + '</td>').join("") + '</tr>').join("");
   return `<section class="panel plan-reference" aria-labelledby="plan-reference-title">
     <header class="panel-header">
-      <h2 id="plan-reference-title">${t("会员额度参考", "Plan allowances")}</h2>
+      <h2 id="plan-reference-title">${t("会员权益与额度", "Plan benefits and allowances")}</h2>
       ${externalLink(t("Google 官方套餐对照", "Compare official Google plans"), officialPlanComparison, "text compact")}
     </header>
     <div class="plan-student-note">
       <p id="student-pro-note"><strong>${t("学生优惠 Pro", "Google AI Pro student offers")}</strong>
         ${t(
-          "表中 Pro 按标准套餐展示。学生优惠的权益和额度因地区及活动而异。免费试用期间，Colab 算力和 YouTube Premium Lite 等权益受限。10 TB 存储加购仅适用于符合条件的常规 Pro 方案。",
-          "The Pro column shows standard plan allowances. Student perks and limits vary by region and offer. Free trials restrict perks such as Colab compute and YouTube Premium Lite. The 10 TB storage add-on is available to eligible standard Pro plans."
+          "表中 Pro 按标准付费套餐展示。免费试用不含 YouTube Premium Lite，Colab 算力也有单独限制。部分地区另有 Pro 与 YouTube Premium 学生组合。10 TB 存储加购仅适用于符合条件的常规 Pro 方案。",
+          "The Pro column shows the standard paid plan. Free trials exclude YouTube Premium Lite and have separate Colab limits. Some regions offer a separate Pro and YouTube Premium student bundle. The 10 TB storage add-on is available to eligible standard Pro plans."
         )}
       </p>
       <div class="actions">
@@ -89,7 +89,7 @@ function renderPlanComparison(catalog, filter) {
       <thead><tr><th scope="col">${t("权益项目", "Perk")}</th>${headers}</tr></thead>
       <tbody>${rows}</tbody>
     </table>
-    <p class="plan-reference-note">${t("资格和实际额度以 Google 账号为准。", "Your Google account shows actual eligibility and allowances.")}${lastChecked ? ` ${t("核对日期", "Checked")} <time datetime="${escapeHtml(lastChecked)}">${escapeHtml(lastChecked)}</time>` : ""}</p>
+    <p class="plan-reference-note">${t("地区、订阅状态和实际额度以 Google 账号显示为准。", "Check your Google account for regional availability, subscription eligibility and actual allowances.")}${lastChecked ? ` ${t("核对日期", "Checked")} <time datetime="${escapeHtml(lastChecked)}">${escapeHtml(lastChecked)}</time>` : ""}</p>
   </section>`;
 }
 function renderBenefitValues(benefit, filter) {
